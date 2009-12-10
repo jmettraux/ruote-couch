@@ -40,6 +40,7 @@ module Couch
       #@cloche.put(@options.merge('type' => 'configuration', '_id' => 'engine'))
 
       @couch = Rufus::Jig::Couch.get_db(*args)
+      @couch = Rufus::Jig::Couch.put_db(*args) unless @couch
 
       upgrade_db
     end
@@ -88,7 +89,9 @@ module Couch
       # TODO : upload initial conf if not present ?
       # TODO : upload design doc ?
 
-      p @couch.get
+      #@cloche.put(@options.merge('type' => 'configuration', '_id' => 'engine'))
+
+      p @couch.get('engine')
     end
   end
 end
