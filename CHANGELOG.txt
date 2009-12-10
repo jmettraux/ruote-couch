@@ -1,0 +1,5 @@
+
+= ruote-couch - CHANGELOG.txt
+
+== ruote-couch 2.1.0    not yet released
+

@@ -1,0 +1,3 @@
+
+require 'ruote/couch/storage'
+
