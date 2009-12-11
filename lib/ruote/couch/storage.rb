@@ -48,12 +48,21 @@ module Couch
 
     def put (doc)
 
-      @couch.put_doc(doc)
+      #p doc
+
+      doc['put_at'] = Ruote.now_to_utc_s
+
+      begin
+        @couch.put_doc(doc)
+        nil
+      rescue
+        @couch.get(doc['_id'])
+      end
     end
 
     def get (type, key)
 
-      @couch.get_doc(key)
+      @couch.get(key)
     end
 
     def delete (doc)
@@ -63,19 +72,21 @@ module Couch
 
     def get_many (type, key=nil, opts={})
 
-      options = if l = opts[:limit]
+      os = if l = opts[:limit]
         "&limit=#{l}"
       else
         ''
       end
 
-      r = if key
-        # TODO : implement me
-      else
-        storage.couch.get("_design/ruote/_view/by_type?key=#{type}#{options}")
-      end
+      #result = if key
+      #  # TODO : implement me
+      #  nil
+      #else
+      #  @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
+      #end
+      result = @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
 
-      r['rows'].collect { |e| e['value'] }
+      result['rows'].collect { |e| e['value'] }
     end
 
     def purge!
@@ -98,14 +109,14 @@ module Couch
 
     def put_options
 
-      doc = get('configurations', 'engine') || {
+      doc = @couch.get_doc('engine') || {
         '_id' => 'engine', 'type' => 'configurations' }
 
       @ptions = { 'color' => 'yellow' }
 
       doc.payload.merge!(@options)
 
-      doc.put rescue put_options
+      doc.put #rescue put_options
         # re-upgrade if the put failed
     end
 
