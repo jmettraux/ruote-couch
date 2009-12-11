@@ -1,0 +1,10 @@
+{
+  "_id": "_design/ruote",
+  "version": 0,
+
+  "views": {
+    "by_type": {
+      "map": "function (doc) { emit(doc.type, null); }"
+    }
+  }
+}

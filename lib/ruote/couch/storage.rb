@@ -33,21 +33,22 @@ module Couch
 
     include Ruote::StorageBase
 
+    attr_reader :couch
+
     def initialize (*args)
 
-      #@cloche = Rufus::Cloche.new(:dir => dir)
-      #@options = options
-      #@cloche.put(@options.merge('type' => 'configuration', '_id' => 'engine'))
+      @options = args.last.is_a?(Hash) ? args.pop : {}
 
       @couch = Rufus::Jig::Couch.get_db(*args)
       @couch = Rufus::Jig::Couch.put_db(*args) unless @couch
 
-      upgrade_db
+      put_options
+      put_design_document
     end
 
     def put (doc)
 
-      @couch.put_doc(key)
+      @couch.put_doc(doc)
     end
 
     def get (type, key)
@@ -84,14 +85,31 @@ module Couch
 
     protected
 
-    def upgrade_db
+    def put_options
 
-      # TODO : upload initial conf if not present ?
-      # TODO : upload design doc ?
+      doc = get('configurations', 'engine') || {
+        '_id' => 'engine', 'type' => 'configurations' }
 
-      #@cloche.put(@options.merge('type' => 'configuration', '_id' => 'engine'))
+      @ptions = { 'color' => 'yellow' }
 
-      p @couch.get('engine')
+      doc.payload.merge!(@options)
+
+      doc.put rescue put_options
+        # re-upgrade if the put failed
+    end
+
+    def put_design_document
+
+      doc = Rufus::Jig::Json.decode(
+        File.read(File.join(File.dirname(__FILE__), 'storage.json')))
+
+      current = @couch.get_doc('_design/ruote')
+
+      if current.nil? || doc['version'] >= (current['version'] || -1)
+
+        current.delete if current
+        @couch.put_doc(doc)
+      end
     end
   end
 end

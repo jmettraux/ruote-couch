@@ -16,6 +16,10 @@ class UtInitialTest < Test::Unit::TestCase
 
     storage = Ruote::Couch::CouchStorage.new(
       'localhost', 5984, 'ruote_couch_test')
+
+    v = storage.couch.get('_design/ruote/_view/by_type')
+
+    assert_equal 1, v['total_rows']
   end
 end
 
