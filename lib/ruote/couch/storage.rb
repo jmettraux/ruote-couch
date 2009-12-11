@@ -61,10 +61,21 @@ module Couch
       @couch.delete_doc(doc)
     end
 
-    def get_many (type, key=nil)
+    def get_many (type, key=nil, opts={})
 
-      #@cloche.get_many(type, key)
-      # TODO : implement me
+      options = if l = opts[:limit]
+        "&limit=#{l}"
+      else
+        ''
+      end
+
+      r = if key
+        # TODO : implement me
+      else
+        storage.couch.get("_design/ruote/_view/by_type?key=#{type}#{options}")
+      end
+
+      r['rows'].collect { |e| e['value'] }
     end
 
     def purge!

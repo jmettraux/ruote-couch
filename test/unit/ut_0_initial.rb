@@ -20,6 +20,8 @@ class UtInitialTest < Test::Unit::TestCase
     v = storage.couch.get('_design/ruote/_view/by_type')
 
     assert_equal 1, v['total_rows']
+
+    #p v['rows']
   end
 end
 

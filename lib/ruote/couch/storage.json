@@ -4,7 +4,7 @@
 
   "views": {
     "by_type": {
-      "map": "function (doc) { emit(doc.type, null); }"
+      "map": "function (doc) { emit(doc.type, doc); }"
     }
   }
 }
