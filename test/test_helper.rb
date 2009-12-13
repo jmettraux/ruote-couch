@@ -11,5 +11,10 @@ require 'test/unit'
 require 'rubygems'
 
 require 'patron' # gem install patron
+#require 'net/http'
+
 require 'yajl' # gem install yajl-ruby
+
+$:.unshift('~/w/rufus/rufus-jig/lib')
+  # TODO : remove me once jig is stable vis-a-vis couch
 

@@ -39,25 +39,24 @@ module Couch
 
       @options = args.last.is_a?(Hash) ? args.pop : {}
 
-      @couch = Rufus::Jig::Couch.get_db(*args)
-      @couch = Rufus::Jig::Couch.put_db(*args) unless @couch
+      @couch = Rufus::Jig::Couch.new(*args)
+      @couch.put('.') unless @couch.get('.')
 
-      put_options
+      put_configuration
       put_design_document
     end
 
     def put (doc)
 
-      #p doc
-
       doc['put_at'] = Ruote.now_to_utc_s
 
-      begin
-        @couch.put_doc(doc)
-        nil
-      rescue
-        @couch.get(doc['_id'])
-      end
+      r = @couch.put(doc, :update_rev => doc['_rev'].nil?)
+
+        # :update_rev => true :
+        # updating the current doc _rev, this trick allows
+        # direct "create then apply" chaining
+
+      nil
     end
 
     def get (type, key)
@@ -67,7 +66,7 @@ module Couch
 
     def delete (doc)
 
-      @couch.delete_doc(doc)
+      @couch.delete(doc)
     end
 
     def get_many (type, key=nil, opts={})
@@ -78,15 +77,20 @@ module Couch
         ''
       end
 
-      #result = if key
-      #  # TODO : implement me
-      #  nil
-      #else
-      #  @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
-      #end
-      result = @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
+      rs = if key
+        # TODO : implement me
+        @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
+      else
+        @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
+      end
 
-      result['rows'].collect { |e| e['value'] }
+      #begin
+      rs['rows'].collect { |e| e['value'] } rescue []
+      #rescue Exception => e
+      #  puts 'x' * 80
+      #  p rs
+      #  raise e
+      #end
     end
 
     def purge!
@@ -107,17 +111,13 @@ module Couch
 
     protected
 
-    def put_options
+    def put_configuration
 
-      doc = @couch.get_doc('engine') || {
-        '_id' => 'engine', 'type' => 'configurations' }
+      return if @couch.get('engine')
 
-      @ptions = { 'color' => 'yellow' }
+      conf = { '_id' => 'engine', 'type' => 'configurations' }.merge!(@options)
 
-      doc.payload.merge!(@options)
-
-      doc.put #rescue put_options
-        # re-upgrade if the put failed
+      @couch.put(conf)
     end
 
     def put_design_document
@@ -125,12 +125,12 @@ module Couch
       doc = Rufus::Jig::Json.decode(
         File.read(File.join(File.dirname(__FILE__), 'storage.json')))
 
-      current = @couch.get_doc('_design/ruote')
+      current = @couch.get('_design/ruote')
 
       if current.nil? || doc['version'] >= (current['version'] || -1)
 
-        current.delete if current
-        @couch.put_doc(doc)
+        @couch.delete(current) if current
+        @couch.put(doc)
       end
     end
   end

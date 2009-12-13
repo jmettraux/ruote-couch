@@ -16,19 +16,22 @@ class FtInitialTest < Test::Unit::TestCase
 
   def test_echo
 
+    #require 'ruote/storage/hash_storage'
+    #storage = Ruote::HashStorage.new
     storage = Ruote::Couch::CouchStorage.new(
-      'localhost', 5984, 'ruote_couch_test')
+      '127.0.0.1', 5984, 'ruote_couch_test')
 
     engine = Ruote::Engine.new(Ruote::Worker.new(storage))
 
+    engine.context[:noisy] = true
+
     pdef = Ruote.process_definition :name => 'test' do
-      echo 'a'
+      echo '* SEEN *'
     end
 
     wfid = engine.launch(pdef)
 
-    #engine.wait_for(wfid)
-    sleep 2
+    engine.wait_for(wfid)
   end
 end
 
