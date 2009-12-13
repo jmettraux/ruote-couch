@@ -84,18 +84,12 @@ module Couch
         @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
       end
 
-      #begin
       rs['rows'].collect { |e| e['value'] } rescue []
-      #rescue Exception => e
-      #  puts 'x' * 80
-      #  p rs
-      #  raise e
-      #end
     end
 
     def purge!
 
-      @couch.delete
+      @couch.delete('.')
     end
 
     def dump (type)

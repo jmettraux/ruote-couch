@@ -7,9 +7,10 @@
 
 require File.join(File.dirname(__FILE__), '..', 'test_helper.rb')
 
-require 'ruote/couch/storage'
 require 'ruote/engine'
 require 'ruote/worker'
+
+require File.join(File.dirname(__FILE__), '..', 'integration_connection.rb')
 
 
 class FtInitialTest < Test::Unit::TestCase
@@ -18,8 +19,8 @@ class FtInitialTest < Test::Unit::TestCase
 
     #require 'ruote/storage/hash_storage'
     #storage = Ruote::HashStorage.new
-    storage = Ruote::Couch::CouchStorage.new(
-      '127.0.0.1', 5984, 'ruote_couch_test')
+
+    storage = new_storage(nil)
 
     engine = Ruote::Engine.new(Ruote::Worker.new(storage))
 
