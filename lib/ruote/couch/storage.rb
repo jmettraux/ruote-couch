@@ -96,7 +96,7 @@ module Couch
 
       s = "=== #{type} ===\n"
 
-      @cloche.get_many(type).inject(s) do |s1, e|
+      get_many(type).inject(s) do |s1, e|
         s1 << "\n"
         e.keys.sort.inject(s1) do |s2, k|
           s2 << "  #{k} => #{e[k].inspect}\n"
