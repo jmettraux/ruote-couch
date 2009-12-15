@@ -13,6 +13,6 @@ require 'ruote/couch/storage'
 
 def new_storage (opts)
 
-  Ruote::Couch::CouchStorage.new('127.0.0.1', 5984, 'ruote_couch_test')
+  Ruote::Couch::CouchStorage.new('127.0.0.1', 5984, 'ruote_couch_test', opts)
 end
 
