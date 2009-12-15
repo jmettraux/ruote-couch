@@ -46,17 +46,17 @@ module Couch
       put_design_document
     end
 
-    def put (doc)
+    def put (doc, opts={})
 
       doc['put_at'] = Ruote.now_to_utc_s
 
-      r = @couch.put(doc, :update_rev => doc['_rev'].nil?)
-
+      r = @couch.put(doc, :update_rev => opts[:update_rev])
+        #
         # :update_rev => true :
         # updating the current doc _rev, this trick allows
         # direct "create then apply" chaining
 
-      nil
+      r ? @couch.get(doc['_id']) : nil
     end
 
     def get (type, key)
@@ -93,14 +93,15 @@ module Couch
     end
 
     def dump (type)
-      #s = "=== #{type} ===\n"
-      #@cloche.get_many(type).inject(s) do |s1, e|
-      #  s1 << "\n"
-      #  e.keys.sort.inject(s1) do |s2, k|
-      #    s2 << "  #{k} => #{e[k].inspect}\n"
-      #  end
-      #end
-      ""
+
+      s = "=== #{type} ===\n"
+
+      @cloche.get_many(type).inject(s) do |s1, e|
+        s1 << "\n"
+        e.keys.sort.inject(s1) do |s2, k|
+          s2 << "  #{k} => #{e[k].inspect}\n"
+        end
+      end
     end
 
     protected
