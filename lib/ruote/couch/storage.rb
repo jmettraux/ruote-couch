@@ -77,14 +77,13 @@ module Couch
         ''
       end
 
-      rs = if key
-        # TODO : implement me
-        @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
-      else
-        @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
-      end
+      rs = @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
+      rs = rs['rows'].collect { |e| e['value'] }
 
-      rs['rows'].collect { |e| e['value'] } rescue []
+      rs = rs.select { |doc| doc['_id'].match(key) } if key
+        # naive...
+
+      rs
     end
 
     def purge!
