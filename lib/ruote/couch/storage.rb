@@ -23,7 +23,7 @@
 #++
 
 require 'ruote/storage/base'
-require 'rufus/jig' # gem install 'rufus-jig'
+require 'rufus/jig' # gem install rufus-jig
 
 
 module Ruote
@@ -66,7 +66,17 @@ module Couch
 
     def delete (doc)
 
-      @couch.delete(doc)
+      begin
+
+        @couch.delete(doc)
+
+      rescue Rufus::Jig::HttpError => he
+        if he.status == 404
+          true
+        else
+          raise he
+        end
+      end
     end
 
     def get_many (type, key=nil, opts={})

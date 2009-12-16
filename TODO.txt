@@ -2,3 +2,5 @@
 [ ] view for ats
 [ ] view for crons
 
+[ ] jig / r-couch should not rely on exceptions
+
