@@ -23,6 +23,8 @@
 #++
 
 require 'ruote/storage/base'
+require 'ruote/couch/version'
+require 'ruote/couch/database'
 require 'rufus/jig' # gem install rufus-jig
 
 
@@ -35,108 +37,89 @@ module Couch
 
     attr_reader :couch
 
-    def initialize (*args)
+    def initialize (host, port, options={})
 
-      @options = args.last.is_a?(Hash) ? args.pop : {}
+      @options = options
 
-      @couch = Rufus::Jig::Couch.new(*args)
-      @couch.put('.') unless @couch.get('.')
+      @prefix = options['prefix'] || ''
+      @prefix = "#{@prefix}_" if @prefix.size > 0
+
+      @dbs = {}
+
+      %w[ msgs ats crons configurations variables ].each do |type|
+
+        @dbs[type] = Database.new(
+          host, port, type, "#{@prefix}ruote_#{type}")
+      end
+
+      %w[ expressions errors workitems ].each do |type|
+
+        @dbs[type] = WfidIndexedDatabase.new(
+          host, port, type, "#{@prefix}ruote_#{type}")
+      end
 
       put_configuration
-      put_design_document
     end
 
     def put (doc, opts={})
 
-      doc['put_at'] = Ruote.now_to_utc_s
-
-      r = @couch.put(doc, :update_rev => opts[:update_rev])
-        #
-        # :update_rev => true :
-        # updating the current doc _rev, this trick allows
-        # direct "create then apply" chaining
-
-      r ? @couch.get(doc['_id']) : nil
+      @dbs[doc['type']].put(doc, opts)
     end
 
     def get (type, key)
 
-      @couch.get(key)
+      @dbs[type].get(key)
     end
 
     def delete (doc)
 
-      begin
-
-        @couch.delete(doc)
-
-      rescue Rufus::Jig::HttpError => he
-        if he.status == 404
-          true
-        else
-          raise he
-        end
-      end
+      @dbs[doc['type']].delete(doc)
     end
 
     def get_many (type, key=nil, opts={})
 
-      os = if l = opts[:limit]
-        "&limit=#{l}"
-      else
-        ''
-      end
-
-      rs = @couch.get("_design/ruote/_view/by_type?key=%22#{type}%22#{os}")
-      rs = rs['rows'].collect { |e| e['value'] }
-
-      rs = rs.select { |doc| doc['_id'].match(key) } if key
-        # naive...
-
-      rs
+      @dbs[type].get_many(key, opts)
     end
 
     def purge!
 
-      @couch.delete('.')
+      @dbs.values.each { |db| db.purge! }
     end
 
     def dump (type)
 
-      s = "=== #{type} ===\n"
+      @dbs[type].dump
+    end
 
-      get_many(type).inject(s) do |s1, e|
-        s1 << "\n"
-        e.keys.sort.inject(s1) do |s2, k|
-          s2 << "  #{k} => #{e[k].inspect}\n"
-        end
-      end
+    def shutdown
+
+      @dbs.values.each { |db| db.shutdown }
     end
 
     protected
 
     def put_configuration
 
-      return if @couch.get('engine')
+      return if get('configurations', 'engine')
 
       conf = { '_id' => 'engine', 'type' => 'configurations' }.merge!(@options)
 
-      @couch.put(conf)
+      put(conf)
     end
 
-    def put_design_document
-
-      doc = Rufus::Jig::Json.decode(
-        File.read(File.join(File.dirname(__FILE__), 'storage.json')))
-
-      current = @couch.get('_design/ruote')
-
-      if current.nil? || doc['version'] >= (current['version'] || -1)
-
-        @couch.delete(current) if current
-        @couch.put(doc)
-      end
-    end
+#    def put_design_document
+#
+#      doc = Rufus::Jig::Json.decode(
+#        File.read(File.join(File.dirname(__FILE__), 'storage.json')))
+#
+#      current = @couch.get('_design/ruote')
+#
+#      if current.nil? || doc['version'] >= (current['version'] || -1)
+#
+#        @couch.delete(current) if current
+#        @couch.put(doc)
+#      end
+#    end
   end
 end
 end

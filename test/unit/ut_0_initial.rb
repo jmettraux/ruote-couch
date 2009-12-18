@@ -15,13 +15,13 @@ class UtInitialTest < Test::Unit::TestCase
   def test_connect
 
     storage = Ruote::Couch::CouchStorage.new(
-      'localhost', 5984, 'ruote_couch_test')
+      '127.0.0.1', 5984, :prefix => 'test')
 
-    v = storage.couch.get('_design/ruote/_view/by_type')
+    v = storage.get_many('configurations')
 
-    assert_equal 1, v['total_rows']
+    #p v
 
-    #p v['rows']
+    assert_equal 1, v.size
   end
 end
 

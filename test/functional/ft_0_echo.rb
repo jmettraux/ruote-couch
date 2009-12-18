@@ -19,6 +19,8 @@ class FtInitialTest < Test::Unit::TestCase
 
     #require 'ruote/storage/hash_storage'
     #storage = Ruote::HashStorage.new
+    #require 'ruote/storage/fs_storage'
+    #storage = Ruote::FsStorage.new('work')
 
     storage = new_storage(nil)
 
@@ -33,6 +35,8 @@ class FtInitialTest < Test::Unit::TestCase
     wfid = engine.launch(pdef)
 
     engine.wait_for(wfid)
+
+    #storage.purge!
   end
 end
 
