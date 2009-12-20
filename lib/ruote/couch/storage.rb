@@ -46,7 +46,7 @@ module Couch
 
       @dbs = {}
 
-      %w[ msgs ats crons configurations variables ].each do |type|
+      %w[ msgs schedules configurations variables ].each do |type|
 
         @dbs[type] = Database.new(
           host, port, type, "#{@prefix}ruote_#{type}")
