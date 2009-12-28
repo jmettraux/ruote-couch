@@ -39,6 +39,9 @@ module Couch
 
     def initialize (host, port, options={})
 
+      @host = host
+      @port = port
+
       @options = options
 
       @prefix = options['prefix'] || ''
@@ -49,13 +52,13 @@ module Couch
       %w[ msgs schedules configurations variables ].each do |type|
 
         @dbs[type] = Database.new(
-          host, port, type, "#{@prefix}ruote_#{type}")
+          @host, @port, type, "#{@prefix}ruote_#{type}")
       end
 
       %w[ expressions errors workitems ].each do |type|
 
         @dbs[type] = WfidIndexedDatabase.new(
-          host, port, type, "#{@prefix}ruote_#{type}")
+          @host, @port, type, "#{@prefix}ruote_#{type}")
       end
 
       put_configuration
@@ -73,7 +76,11 @@ module Couch
 
     def delete (doc)
 
-      @dbs[doc['type']].delete(doc)
+      db = @dbs[doc['type']]
+
+      raise ArgumentError.new("no database for type '#{doc['type']}'") unless db
+
+      db.delete(doc)
     end
 
     def get_many (type, key=nil, opts={})
@@ -94,6 +101,13 @@ module Couch
     def shutdown
 
       @dbs.values.each { |db| db.shutdown }
+    end
+
+    # Mainly used by ruote's test/unit/ut_17_storage.rb
+    #
+    def add_test_type (type)
+
+      @dbs[type] = Database.new(@host, @port, type, "#{@prefix}ruote_#{type}")
     end
 
     protected
