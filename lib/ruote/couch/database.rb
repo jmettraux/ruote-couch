@@ -29,10 +29,9 @@ module Ruote::Couch
 
     attr_reader :type
 
-    def initialize (host, port, type, name)
+    def initialize (host, port, type, name, re_put_ok=true)
 
-      @couch = Rufus::Jig::Couch.new(host, port, name)
-
+      @couch = Rufus::Jig::Couch.new(host, port, name, :re_put_ok => re_put_ok)
       @couch.put('.') unless @couch.get('.')
 
       @type = type
@@ -44,13 +43,11 @@ module Ruote::Couch
 
       doc['put_at'] = Ruote.now_to_utc_s
 
-      r = @couch.put(doc, :update_rev => opts[:update_rev])
+      @couch.put(doc, :update_rev => opts[:update_rev])
         #
         # :update_rev => true :
         # updating the current doc _rev, this trick allows
         # direct "create then apply" chaining
-
-      r ? @couch.get(doc['_id']) : nil
     end
 
     def get (key)
@@ -140,6 +137,8 @@ module Ruote::Couch
     protected
 
     def prepare
+
+      # TODO
     end
   end
 end

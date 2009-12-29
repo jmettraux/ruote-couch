@@ -55,11 +55,14 @@ module Couch
           @host, @port, type, "#{@prefix}ruote_#{type}")
       end
 
-      %w[ expressions errors workitems ].each do |type|
+      %w[ errors workitems ].each do |type|
 
         @dbs[type] = WfidIndexedDatabase.new(
           @host, @port, type, "#{@prefix}ruote_#{type}")
       end
+
+      @dbs['expressions'] = WfidIndexedDatabase.new(
+        @host, @port, 'expressions', "#{@prefix}ruote_expressions", false)
 
       put_configuration
     end
@@ -107,7 +110,8 @@ module Couch
     #
     def add_test_type (type)
 
-      @dbs[type] = Database.new(@host, @port, type, "#{@prefix}ruote_#{type}")
+      @dbs[type] = Database.new(
+        @host, @port, type, "#{@prefix}ruote_#{type}", false)
     end
 
     protected
