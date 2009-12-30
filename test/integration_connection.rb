@@ -5,8 +5,10 @@
 # Sun Dec 13 20:22:43 JST 2009
 #
 
-require 'yajl'
-require 'patron'
+require 'yajl' rescue require 'json'
+Rufus::Json.detect_backend
+
+require 'patron' rescue nil
 
 require 'ruote/couch/storage'
 
