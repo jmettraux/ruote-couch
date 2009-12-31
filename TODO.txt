@@ -4,3 +4,5 @@
 
 [ ] jig / r-couch should not rely on exceptions
 
+[x] ct_2 --couch says put(gone) is returning nil... :(
+
