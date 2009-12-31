@@ -1,5 +1,26 @@
 
 = ruote-couch
 
-relax persistently
+A storage implementation for ruote 2.1.x.
+
+Warning : this is a very naive implementation for now. No optimizations.
+
+
+== license
+
+MIT
+
+
+== Links
+
+http://ruote.rubyforge.org
+http://github.com/jmettraux/ruote
+
+http://jmettraux.wordpress.com (blog)
+
+
+== feedback
+
+mailing list : http://groups.google.com/group/openwferu-users
+irc : irc.freenode.net #ruote
 
