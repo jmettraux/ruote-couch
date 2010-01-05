@@ -108,7 +108,7 @@ module Couch
 
     # Mainly used by ruote's test/unit/ut_17_storage.rb
     #
-    def add_test_type (type)
+    def add_type (type)
 
       @dbs[type] = Database.new(
         @host, @port, type, "#{@prefix}ruote_#{type}", false)

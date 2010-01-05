@@ -6,6 +6,7 @@
 #
 
 require 'yajl' rescue require 'json'
+require 'rufus-json'
 Rufus::Json.detect_backend
 
 require 'patron' rescue nil

@@ -57,17 +57,7 @@ module Ruote::Couch
 
     def delete (doc)
 
-      begin
-
-        @couch.delete(doc)
-
-      rescue Rufus::Jig::HttpError => he
-        if he.status == 404
-          true
-        else
-          raise he
-        end
-      end
+      @couch.delete(doc)
     end
 
     def get_many (key, opts)
