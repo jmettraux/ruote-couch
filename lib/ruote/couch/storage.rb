@@ -114,6 +114,15 @@ module Couch
         @host, @port, type, "#{@prefix}ruote_#{type}", false)
     end
 
+    # Nukes a db type and reputs it (losing all the documents that were in it).
+    #
+    def purge_type! (type)
+
+      if db = @dbs[type]
+        db.purge_docs!
+      end
+    end
+
     protected
 
     def put_configuration

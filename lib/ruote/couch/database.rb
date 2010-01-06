@@ -95,10 +95,20 @@ module Ruote::Couch
       @couch.close
     end
 
+    # Deletes database and closes it.
+    #
     def purge!
 
       @couch.delete('.')
       @couch.close
+    end
+
+    # Removes all the documents in this database.
+    #
+    def purge_docs!
+
+      @couch.delete('.')
+      @couch.put('.')
     end
 
     protected

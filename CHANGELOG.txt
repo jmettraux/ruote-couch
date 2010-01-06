@@ -1,5 +1,11 @@
 
 = ruote-couch - CHANGELOG.txt
 
+
+== ruote-couch 2.1.4    not yet released
+
+- Ruote::Couch::Storage added #purge_type!(t)
+
+
 == ruote-couch 2.1.3    released 2009/01/05
 
