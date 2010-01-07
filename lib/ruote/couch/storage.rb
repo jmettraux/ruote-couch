@@ -91,6 +91,11 @@ module Couch
       @dbs[type].get_many(key, opts)
     end
 
+    def ids (type)
+
+      @dbs[type].ids
+    end
+
     def purge!
 
       @dbs.values.each { |db| db.purge! }

@@ -4,6 +4,7 @@
 
 == ruote-couch 2.1.4    not yet released
 
+- Ruote::Couch::Storage added #ids(type)
 - Ruote::Couch::Storage added #purge_type!(t)
 
 

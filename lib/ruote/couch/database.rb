@@ -78,6 +78,15 @@ module Ruote::Couch
       rs
     end
 
+    # Returns a sorted list of the ids of all the docs in this database.
+    #
+    def ids
+
+      rs = @couch.get('_all_docs')
+
+      rs['rows'].collect { |r| r['id'] }
+    end
+
     def dump
 
       s = "=== #{@type} ===\n"
