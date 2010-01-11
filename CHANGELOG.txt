@@ -2,7 +2,7 @@
 = ruote-couch - CHANGELOG.txt
 
 
-== ruote-couch 2.1.4    not yet released
+== ruote-couch 2.1.4    released 2009/01/11
 
 - Ruote::Couch::Storage added #ids(type)
 - Ruote::Couch::Storage added #purge_type!(t)

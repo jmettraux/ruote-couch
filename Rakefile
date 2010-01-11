@@ -35,7 +35,7 @@ CouchDB storage for ruote 2.1 (ruby workflow engine)
   gem.add_dependency 'ruote', ">= #{Ruote::Couch::VERSION}"
   #gem.add_dependency 'yajl-ruby'
   #gem.add_dependency 'json'
-  gem.add_dependency 'rufus-jig', '>= 0.1.10'
+  gem.add_dependency 'rufus-jig', '>= 0.1.11'
   gem.add_development_dependency 'yard', '>= 0'
 
   # gemspec spec : http://www.rubygems.org/read/chapter/20
