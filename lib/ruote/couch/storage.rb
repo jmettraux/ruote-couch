@@ -55,14 +55,14 @@ module Couch
           @host, @port, type, "#{@prefix}ruote_#{type}")
       end
 
-      %w[ errors workitems ].each do |type|
-
-        @dbs[type] = WfidIndexedDatabase.new(
-          @host, @port, type, "#{@prefix}ruote_#{type}")
-      end
+      @dbs['errors'] = WfidIndexedDatabase.new(
+        @host, @port, 'errors', "#{@prefix}ruote_errors")
 
       @dbs['expressions'] = WfidIndexedDatabase.new(
         @host, @port, 'expressions', "#{@prefix}ruote_expressions", false)
+
+      @dbs['workitems'] = WorkitemDatabase.new(
+        @host, @port, 'workitems', "#{@prefix}ruote_workitems")
 
       put_configuration
     end

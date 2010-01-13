@@ -6,16 +6,14 @@
 #
 
 require File.join(File.dirname(__FILE__), '..', 'test_helper.rb')
-
-require 'ruote/couch/storage'
+require File.join(File.dirname(__FILE__), '..', 'integration_connection.rb')
 
 
 class UtInitialTest < Test::Unit::TestCase
 
   def test_connect
 
-    storage = Ruote::Couch::CouchStorage.new(
-      '127.0.0.1', 5984, :prefix => 'test')
+    storage = new_storage(nil)
 
     v = storage.get_many('configurations')
 

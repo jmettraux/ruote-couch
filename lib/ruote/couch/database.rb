@@ -62,20 +62,14 @@ module Ruote::Couch
 
     def get_many (key, opts)
 
-      os = if l = opts[:limit]
-        "&limit=#{l}"
-      else
-        ''
-      end
-
-      rs = @couch.get("_all_docs?include_docs=true#{os}")
+      rs = @couch.get("_all_docs?include_docs=true#{query_options(opts)}")
 
       rs = rs['rows'].collect { |e| e['doc'] }
 
       rs = rs.select { |doc| doc['_id'].match(key) } if key
         # naive...
 
-      rs
+      rs.select { |doc| ! doc['_id'].match(/^\_design\//) }
     end
 
     # Returns a sorted list of the ids of all the docs in this database.
@@ -126,28 +120,67 @@ module Ruote::Couch
 
       # nothing to do for a index-less database
     end
+
+    def query_options (opts)
+
+      if l = opts[:limit]
+        "&limit=#{l}"
+      else
+        ''
+      end
+    end
   end
 
   class WfidIndexedDatabase < Database
 
-    #DESIGN_DOC_TEMPLATE = %{
-    #  {
-    #    "_id": "_design/ruote",
-    #    "version": 0,
-    #
-    #    "views": {
-    #      "by_type": {
-    #        "map": "function (doc) { emit(doc.type, doc); }"
-    #      }
-    #    }
-    #  }
-    #}.strip
+    BY_WFID_DESIGN_DOC = {
+      '_id' => '_design/ruote',
+      'version' => 0,
+      'views' => {
+        #'by_wfid' => { 'map' => 'function (doc) { emit(doc.fei.wfid, doc); }' }
+        'by_wfid' => {
+          'map' => 'function (doc) { if (doc.fei) emit(doc.fei.wfid, null); }' }
+      }
+    }
+
+    def get_many (key, opts)
+
+      if key && m = key.source.match(/!?(.+)\$$/)
+        # let's use the couch view...
+
+        rs = @couch.get(
+          "_design/ruote/_view/by_wfid?key=%22#{m[1]}%22" +
+          "&include_docs=true#{query_options(opts)}")
+
+        rs['rows'].collect { |e| e['doc'] }
+
+      else
+        # let's use the naive default implementation
+
+        super
+      end
+    end
 
     protected
 
     def prepare
 
-      # TODO
+      @couch.delete('_design/ruote')
+      @couch.put(BY_WFID_DESIGN_DOC)
+    end
+  end
+
+  class WorkitemDatabase < WfidIndexedDatabase
+
+    # TODO : write specialized CouchStorageParticipant class ?
+
+    protected
+
+    def prepare
+
+      # TODO : insert special payload view
+
+      super
     end
   end
 end
