@@ -25,6 +25,9 @@
 
 module Ruote::Couch
 
+  #
+  # A database corresponds to a Couch database (not a Couch server).
+  #
   class Database
 
     attr_reader :type
@@ -131,17 +134,10 @@ module Ruote::Couch
     end
   end
 
+  #
+  # A Couch database with a by_wfid view.
+  #
   class WfidIndexedDatabase < Database
-
-    BY_WFID_DESIGN_DOC = {
-      '_id' => '_design/ruote',
-      'version' => 0,
-      'views' => {
-        #'by_wfid' => { 'map' => 'function (doc) { emit(doc.fei.wfid, doc); }' }
-        'by_wfid' => {
-          'map' => 'function (doc) { if (doc.fei) emit(doc.fei.wfid, null); }' }
-      }
-    }
 
     def get_many (key, opts)
 
@@ -163,24 +159,75 @@ module Ruote::Couch
 
     protected
 
+    def design_doc
+
+      {
+        '_id' => '_design/ruote',
+        'views' => {
+          'by_wfid' => {
+            'map' =>
+              'function (doc) { if (doc.fei) emit(doc.fei.wfid, null); }'
+          }
+        }
+      }
+    end
+
     def prepare
 
       @couch.delete('_design/ruote')
-      @couch.put(BY_WFID_DESIGN_DOC)
+      @couch.put(design_doc)
     end
   end
 
+  #
+  # A Couch database with a by_wfid view and a by_field view.
+  #
   class WorkitemDatabase < WfidIndexedDatabase
 
     # TODO : write specialized CouchStorageParticipant class ?
 
+    def by_field (field, value=nil, opts={})
+
+      # TODO
+    end
+
+    def by_participant_name (name, opts={})
+
+      rs = @couch.get(
+        "_design/ruote/_view/by_participant_name?key=%22#{name}%22" +
+        "&include_docs=true#{query_options(opts)}")
+
+      rs['rows'].collect { |e| e['doc'] }
+    end
+
     protected
 
-    def prepare
+    def design_doc
 
-      # TODO : insert special payload view
+      doc = super
 
-      super
+      doc['views']['by_field'] = {
+        'map' => %{
+          function(doc) {
+            if (doc.fields) {
+              doc.fields.forEach(function(field) {
+                emit(field, doc.field[field]);
+              });
+            }
+          }
+        }
+      }
+      doc['views']['by_participant_name'] = {
+        'map' => %{
+          function (doc) {
+            if (doc.participant_name) {
+              emit(doc.participant_name, null);
+            }
+          }
+        }
+      }
+
+      doc
     end
   end
 end
