@@ -128,6 +128,23 @@ module Couch
       end
     end
 
+    # A provision made for workitems, allow to query them directly by
+    # participant name.
+    #
+    def by_participant (type, participant_name)
+
+      raise NotImplementedError if type != 'workitems'
+
+      @dbs['workitems'].by_participant(participant_name)
+    end
+
+    def by_field (type, field, value=nil)
+
+      raise NotImplementedError if type != 'workitems'
+
+      @dbs['workitems'].by_field(field, value)
+    end
+
     protected
 
     def put_configuration
@@ -138,20 +155,6 @@ module Couch
 
       put(conf)
     end
-
-#    def put_design_document
-#
-#      doc = Rufus::Jig::Json.decode(
-#        File.read(File.join(File.dirname(__FILE__), 'storage.json')))
-#
-#      current = @couch.get('_design/ruote')
-#
-#      if current.nil? || doc['version'] >= (current['version'] || -1)
-#
-#        @couch.delete(current) if current
-#        @couch.put(doc)
-#      end
-#    end
   end
 end
 end

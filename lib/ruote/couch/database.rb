@@ -22,6 +22,8 @@
 # Made in Japan.
 #++
 
+require 'cgi'
+
 
 module Ruote::Couch
 
@@ -124,6 +126,8 @@ module Ruote::Couch
       # nothing to do for a index-less database
     end
 
+    # (for now, the only option is :limit)
+    #
     def query_options (opts)
 
       if l = opts[:limit]
@@ -131,6 +135,13 @@ module Ruote::Couch
       else
         ''
       end
+    end
+
+    def query (uri)
+
+      rs = @couch.get(uri)
+
+      rs['rows'].collect { |e| e['doc'] }
     end
   end
 
@@ -144,11 +155,9 @@ module Ruote::Couch
       if key && m = key.source.match(/!?(.+)\$$/)
         # let's use the couch view...
 
-        rs = @couch.get(
+        query(
           "_design/ruote/_view/by_wfid?key=%22#{m[1]}%22" +
           "&include_docs=true#{query_options(opts)}")
-
-        rs['rows'].collect { |e| e['doc'] }
 
       else
         # let's use the naive default implementation
@@ -174,7 +183,8 @@ module Ruote::Couch
 
     def prepare
 
-      @couch.delete('_design/ruote')
+      d = @couch.get('_design/ruote')
+      @couch.delete(d) if d
       @couch.put(design_doc)
     end
   end
@@ -184,20 +194,25 @@ module Ruote::Couch
   #
   class WorkitemDatabase < WfidIndexedDatabase
 
-    # TODO : write specialized CouchStorageParticipant class ?
-
+    # This method is called by CouchStorage#by_field
+    #
     def by_field (field, value=nil, opts={})
 
-      # TODO
+      field = { field => value } if value
+      field = CGI.escape(Rufus::Json.encode(field))
+
+      query(
+        "_design/ruote/_view/by_field?key=#{field}" +
+        "&include_docs=true#{query_options(opts)}")
     end
 
-    def by_participant_name (name, opts={})
+    # This method is called by CouchStorage#by_participant
+    #
+    def by_participant (name, opts={})
 
-      rs = @couch.get(
+      query(
         "_design/ruote/_view/by_participant_name?key=%22#{name}%22" +
         "&include_docs=true#{query_options(opts)}")
-
-      rs['rows'].collect { |e| e['doc'] }
     end
 
     protected
@@ -206,13 +221,29 @@ module Ruote::Couch
 
       doc = super
 
+      # NOTE : with 'by_field', for a workitem with N fields there are
+      # currently 2 * N rows generated per workitem.
+      #
+      # Why not restrict { field => value } keys to only fields whose value
+      # is a string, a boolean or null ? I have the impression that querying
+      # for field whose value is 'complex' (array or hash) is not necessary
+      # (though sounding crazy useful).
+
       doc['views']['by_field'] = {
         'map' => %{
           function(doc) {
             if (doc.fields) {
-              doc.fields.forEach(function(field) {
-                emit(field, doc.field[field]);
-              });
+              for (var field in doc.fields) {
+
+                emit(field, null);
+
+                var k = {};
+                k[field] = doc.fields[field]
+                emit(k, null);
+                  //
+                  // have to use that k trick...
+                  // else the field is named 'field'
+              }
             }
           }
         }
