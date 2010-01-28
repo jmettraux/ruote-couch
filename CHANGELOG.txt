@@ -2,16 +2,16 @@
 = ruote-couch - CHANGELOG.txt
 
 
-== ruote-couch 2.1.5    not yet released
+== ruote-couch 2.1.5    released 2010/01/28
 
 - implemented CouchStorage#by_wfid and #by_participant
 
 
-== ruote-couch 2.1.4    released 2009/01/11
+== ruote-couch 2.1.4    released 2010/01/11
 
 - Ruote::Couch::CouchStorage added #ids(type)
 - Ruote::Couch::CouchStorage added #purge_type!(t)
 
 
-== ruote-couch 2.1.3    released 2009/01/05
+== ruote-couch 2.1.3    released 2010/01/05
 
