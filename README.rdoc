@@ -3,7 +3,27 @@
 
 A storage implementation for ruote 2.1.x.
 
-Warning : this is a very naive implementation for now. No optimizations.
+Warning : this is a very naive implementation for now. Not many optimizations...
+
+
+== running tests
+
+assuming you have
+
+  ruote/
+  ruote-couch/
+
+* unit tests :
+
+get into ruote/ and do
+
+  ruby test/unit/storage.rb --couch
+
+* functional tests :
+
+get into ruote/ and do
+
+  ruby test/functional/test.rb --couch
 
 
 == license
