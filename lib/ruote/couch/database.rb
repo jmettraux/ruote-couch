@@ -30,6 +30,9 @@ module Ruote::Couch
   #
   # A database corresponds to a Couch database (not a Couch server).
   #
+  # There is one database per ruote document type (msgs, workitems,
+  # expressions, ...)
+  #
   class Database
 
     attr_reader :type

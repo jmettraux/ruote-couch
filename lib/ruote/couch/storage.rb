@@ -31,12 +31,23 @@ require 'rufus/jig' # gem install rufus-jig
 module Ruote
 module Couch
 
+  #
+  # A CouchDB storage mechanism for ruote.
+  #
+  # The storage merely 'routes' work to Ruote::Couch::Database instances,
+  # one per document 'type' (expressions, msgs, schedules, variables, ...)
+  #
   class CouchStorage
 
     include Ruote::StorageBase
 
     attr_reader :couch
 
+    # Hooks the storage to a CouchDB instance.
+    #
+    # The main option is 'prefix', which indicate which prefix should be
+    # added to all the database names used by this storage.
+    #
     def initialize (host, port, options={})
 
       @host = host
