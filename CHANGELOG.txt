@@ -4,6 +4,8 @@
 
 == ruote-couch 2.1.7    not yet released
 
+- enabled Ruote::StorageParticipant#query(criteria)
+
 
 == ruote-couch 2.1.5    released 2010/01/28
 

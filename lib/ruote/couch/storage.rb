@@ -156,6 +156,11 @@ module Couch
       @dbs['workitems'].by_field(field, value)
     end
 
+    def query_workitems (criteria)
+
+      @dbs['workitems'].query_workitems(criteria)
+    end
+
     protected
 
     def put_configuration

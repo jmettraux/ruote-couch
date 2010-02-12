@@ -133,11 +133,11 @@ module Ruote::Couch
     #
     def query_options (opts)
 
-      if l = opts[:limit]
-        "&limit=#{l}"
-      else
-        ''
-      end
+      opts = opts.select { |k, v| [ :limit, :skip ].include?(k) && v != nil }
+
+      s = opts.collect { |k, v| "#{k}=#{v}" }.join('&')
+
+      s.length > 0 ? "&#{s}" : ''
     end
 
     def query (uri)
@@ -145,6 +145,15 @@ module Ruote::Couch
       rs = @couch.get(uri)
 
       rs['rows'].collect { |e| e['doc'] }
+    end
+
+    def query_by_post (uri, keys)
+
+      keys = { 'keys' => keys }
+
+      rs = @couch.post(uri, keys)
+
+      rs['rows'].collect { |e| e['doc'] }.uniq
     end
   end
 
@@ -167,6 +176,13 @@ module Ruote::Couch
 
         super
       end
+    end
+
+    # Used by WorkitemDatabase#query
+    #
+    def by_wfid (wfid)
+
+      get_many(/!#{wfid}$/, {})
     end
 
     protected
@@ -218,6 +234,42 @@ module Ruote::Couch
         "&include_docs=true#{query_options(opts)}")
     end
 
+    # This method is called by CouchStorage#query
+    #
+    def query_workitems (criteria)
+
+      offset = criteria.delete('offset')
+      limit = criteria.delete('limit')
+
+      wfid =
+        criteria.delete('wfid')
+      pname =
+        criteria.delete('participant_name') || criteria.delete('participant')
+
+      if criteria.empty? && (wfid.nil? ^ pname.nil?)
+        return by_participant(pname) if pname
+        return by_wfid(wfid) # if wfid
+      end
+
+      return get_many(nil, {}).collect { |hwi| Ruote::Workitem.new(hwi) } \
+        if criteria.empty?
+
+      cr = criteria.collect { |fname, fvalue| { fname => fvalue } }
+
+      opts = { :skip => offset, :limit => limit }
+
+      hwis = query_by_post(
+        "_design/ruote/_view/by_field?include_docs=true#{query_options(opts)}",
+        cr)
+
+      hwis = hwis.select { |hwi| hwi['fei']['wfid'] == wfid } if wfid
+
+      hwis = hwis.select { |hwi|
+        Ruote::StorageParticipant.matches?(hwi, pname, criteria) }
+
+      hwis.collect { |hwi| Ruote::Workitem.new(hwi) }
+    end
+
     protected
 
     def design_doc
@@ -240,11 +292,11 @@ module Ruote::Couch
 
                 emit(field, null);
 
-                var k = {};
-                k[field] = doc.fields[field]
-                emit(k, null);
+                var entry = {};
+                entry[field] = doc.fields[field]
+                emit(entry, null);
                   //
-                  // have to use that k trick...
+                  // have to use that 'entry' trick...
                   // else the field is named 'field'
               }
             }
