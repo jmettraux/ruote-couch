@@ -55,7 +55,7 @@ module Couch
 
       @options = options
 
-      @prefix = options['prefix'] || ''
+      @prefix = options['prefix'] || options[:prefix] || ''
       @prefix = "#{@prefix}_" if @prefix.size > 0
 
       @dbs = {}
