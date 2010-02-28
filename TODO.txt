@@ -6,3 +6,5 @@
 
 [x] ct_2 --couch says put(gone) is returning nil... :(
 
+[ ] ?feed=longpool&heartbeat=x (parallel thread or smarter scheduler ?)
+
