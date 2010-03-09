@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["John Mettraux"]
-  s.date = %q{2010-02-24}
+  s.date = %q{2010-03-09}
   s.description = %q{CouchDB storage for ruote 2.1 (ruby workflow engine)}
   s.email = %q{jmettraux@gmail.com}
   s.extra_rdoc_files = [
@@ -47,18 +47,18 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<ruote>, [">= 2.1.8"])
-      s.add_runtime_dependency(%q<rufus-jig>, [">= 0.1.13"])
+      s.add_runtime_dependency(%q<rufus-jig>, [">= 0.1.14"])
       s.add_development_dependency(%q<yard>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
     else
       s.add_dependency(%q<ruote>, [">= 2.1.8"])
-      s.add_dependency(%q<rufus-jig>, [">= 0.1.13"])
+      s.add_dependency(%q<rufus-jig>, [">= 0.1.14"])
       s.add_dependency(%q<yard>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
     end
   else
     s.add_dependency(%q<ruote>, [">= 2.1.8"])
-    s.add_dependency(%q<rufus-jig>, [">= 0.1.13"])
+    s.add_dependency(%q<rufus-jig>, [">= 0.1.14"])
     s.add_dependency(%q<yard>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
   end

@@ -76,6 +76,8 @@ module Couch
         @host, @port, 'workitems', "#{@prefix}ruote_workitems")
 
       put_configuration
+
+      @zero_msgs_offset = 14
     end
 
     def put (doc, opts={})
@@ -159,6 +161,55 @@ module Couch
     def query_workitems (criteria)
 
       @dbs['workitems'].query_workitems(criteria)
+    end
+
+    # Overwriting Ruote::StorageBase.get_msgs
+    #
+    # Taking care of using long-polling
+    # (http://wiki.apache.org/couchdb/HTTP_database_API) when possible
+    #
+    def get_msgs
+
+      if @zero_msgs_offset > 0
+
+        msgs = get_many(
+          'msgs', nil, :limit => 300
+        ).sort { |a, b|
+          a['put_at'] <=> b['put_at']
+        }
+
+        @zero_msgs_offset = @zero_msgs_offset - 1 if msgs.size == 0
+        return msgs
+      end
+
+      @zero_msgs_offset = 14
+
+      schedules = get_many('schedules')
+
+      next_at = schedules.collect { |s| s['at'] }.sort.first
+      delta = next_at ? (Time.parse(next_at) - Time.now) : nil
+
+      return [] if delta && delta < 60.0
+
+      last_seq = @dbs['msgs'].get('_changes')['last_seq']
+
+      timeout = delta ? delta - 10.0 : -1.0
+        # wakeup at least 10 seconds before next schedule
+
+      p [ :last_seq, last_seq, :delta, delta, :timeout, timeout ]
+
+      # TODO : use timeout
+
+      begin
+        @dbs['msgs'].get(
+          "_changes?feed=longpoll&heartbeat=60000&since=#{last_seq}")
+            # block until there is a change in the 'msgs' db
+      rescue Exception => e
+      #rescue Rufus::Jig::TimeoutError => te
+        #p [ :caught, e.class ]
+      end
+
+      []
     end
 
     protected

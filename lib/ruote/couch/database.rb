@@ -39,7 +39,11 @@ module Ruote::Couch
 
     def initialize (host, port, type, name, re_put_ok=true)
 
-      @couch = Rufus::Jig::Couch.new(host, port, name, :re_put_ok => re_put_ok)
+      opts = { :re_put_ok => re_put_ok }
+      #opts[:timeout] = TODO
+
+      @couch = Rufus::Jig::Couch.new(host, port, name, opts)
+
       @couch.put('.') unless @couch.get('.')
 
       @type = type
