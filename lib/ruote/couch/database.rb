@@ -62,9 +62,9 @@ module Ruote::Couch
         # direct "create then apply" chaining
     end
 
-    def get (key)
+    def get (key, opts={})
 
-      @couch.get(key)
+      @couch.get(key, opts)
     end
 
     def delete (doc)

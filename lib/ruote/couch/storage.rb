@@ -196,17 +196,19 @@ module Couch
       timeout = delta ? delta - 10.0 : -1.0
         # wakeup at least 10 seconds before next schedule
 
-      p [ :last_seq, last_seq, :delta, delta, :timeout, timeout ]
-
-      # TODO : use timeout
+      #p [ Time.now, :last_seq, last_seq, :delta, delta, :timeout, timeout ]
 
       begin
         @dbs['msgs'].get(
-          "_changes?feed=longpoll&heartbeat=60000&since=#{last_seq}")
+          "_changes?feed=longpoll&heartbeat=60000&since=#{last_seq}",
+          :timeout => timeout)
             # block until there is a change in the 'msgs' db
       rescue Exception => e
       #rescue Rufus::Jig::TimeoutError => te
-        #p [ :caught, e.class ]
+        p [ :caught, e.class ]
+        e.backtrace.each do |l|
+          puts l
+        end
       end
 
       []

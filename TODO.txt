@@ -1,10 +1,13 @@
 
+[x] ct_2 --couch says put(gone) is returning nil... :(
+[o] ?feed=longpool&heartbeat=x (parallel thread or smarter scheduler ?)
+
 [ ] view for ats
 [ ] view for crons
 
 [ ] jig / r-couch should not rely on exceptions
 
-[x] ct_2 --couch says put(gone) is returning nil... :(
-
-[ ] ?feed=longpool&heartbeat=x (parallel thread or smarter scheduler ?)
+[ ] re-run suite with --patron
+[ ] run suite with --net
+[ ] run suite with --em
 
