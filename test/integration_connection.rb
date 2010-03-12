@@ -10,7 +10,7 @@ require 'rufus-json'
 Rufus::Json.detect_backend
 
 begin
-  require 'patron'
+  require 'patron' unless ARGV.include?('--net')
 rescue LoadError
   # then use 'net/http'
 end
@@ -23,6 +23,8 @@ def new_storage (opts)
   opts ||= {}
 
   Ruote::Couch::CouchStorage.new(
-    '127.0.0.1', 5984, opts.merge!('prefix' => 'test'))
+    '127.0.0.1',
+    5984,
+    opts.merge!('couch_prefix' => 'test', 'couch_timeout' => 1))
 end
 

@@ -45,8 +45,10 @@ module Couch
 
     # Hooks the storage to a CouchDB instance.
     #
-    # The main option is 'prefix', which indicate which prefix should be
+    # The main option is 'couch_prefix', which indicate which prefix should be
     # added to all the database names used by this storage.
+    #
+    # TODO : document 'couch_timeout' option
     #
     def initialize (host, port, options={})
 
@@ -55,8 +57,11 @@ module Couch
 
       @options = options
 
-      @prefix = options['prefix'] || options[:prefix] || ''
+      @prefix = options['couch_prefix'] || options['prefix'] || ''
       @prefix = "#{@prefix}_" if @prefix.size > 0
+
+      @zeroes = 21 # maybe make it an option
+      @timeout = options['couch_timeout'] || 60
 
       @dbs = {}
 
@@ -77,7 +82,7 @@ module Couch
 
       put_configuration
 
-      @zero_msgs_offset = 14
+      @zero_msgs_offset = @zeroes
     end
 
     def put (doc, opts={})
@@ -120,6 +125,8 @@ module Couch
     end
 
     def shutdown
+
+      @poller.kill if @poller
 
       @dbs.values.each { |db| db.shutdown }
     end
@@ -182,33 +189,39 @@ module Couch
         return msgs
       end
 
-      @zero_msgs_offset = 14
+      @zero_msgs_offset = @zeroes
 
       schedules = get_many('schedules')
 
       next_at = schedules.collect { |s| s['at'] }.sort.first
       delta = next_at ? (Time.parse(next_at) - Time.now) : nil
 
-      return [] if delta && delta < 60.0
+      #p [ delta, @timeout ]
+
+      return [] if delta && delta < 5.0
 
       last_seq = @dbs['msgs'].get('_changes')['last_seq']
 
-      timeout = delta ? delta - 10.0 : -1.0
-        # wakeup at least 10 seconds before next schedule
+      timeout = delta ? delta - 3.0 : -1.0
+      timeout = (timeout < 0.0 || timeout > @timeout) ? @timeout : timeout
 
-      #p [ Time.now, :last_seq, last_seq, :delta, delta, :timeout, timeout ]
+      #p [ Time.now, :last_seq, last_seq, :timeout, timeout ]
 
       begin
+
+        @poller = Thread.current
+
         @dbs['msgs'].get(
           "_changes?feed=longpoll&heartbeat=60000&since=#{last_seq}",
           :timeout => timeout)
             # block until there is a change in the 'msgs' db
+
       rescue Exception => e
       #rescue Rufus::Jig::TimeoutError => te
-        p [ :caught, e.class ]
-        e.backtrace.each do |l|
-          puts l
-        end
+      #  p [ :caught, e.class ]
+      #  e.backtrace.each { |l| puts l }
+      ensure
+        @poller = nil
       end
 
       []
