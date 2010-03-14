@@ -6,7 +6,9 @@ require 'test/unit'
 
 require 'rubygems'
 require 'yajl'
-require 'patron'
+
+require 'patron' unless ARGV.include?('--net')
+  # TODO : provide for em-http-request
 
 require 'ruote'
 require 'ruote/couch'

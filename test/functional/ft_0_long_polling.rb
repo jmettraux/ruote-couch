@@ -38,7 +38,7 @@ class FtLongPollingTest < Test::Unit::TestCase
     pdef = Ruote.process_definition do
       sequence do
         alpha
-        wait :for => '3m'
+        wait '3m'
         bravo
       end
     end
