@@ -48,7 +48,10 @@ module Couch
     # The main option is 'couch_prefix', which indicate which prefix should be
     # added to all the database names used by this storage.
     #
-    # TODO : document 'couch_timeout' option
+    # The option 'couch_timeout' is used what is the get_msgs timeout. This
+    # is the long-polling timeout. For functional test it is set to two seconds
+    # but for a production system, something like 10 minutes or 8 hours might
+    # be OK.
     #
     def initialize (host, port, options={})
 
