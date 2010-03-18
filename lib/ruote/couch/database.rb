@@ -189,6 +189,13 @@ module Ruote::Couch
       get_many(/!#{wfid}$/, {})
     end
 
+    # Returns the design document that goes with this class of database
+    #
+    def self.design_doc
+
+      self.allocate.send(:design_doc)
+    end
+
     protected
 
     def design_doc
@@ -272,6 +279,13 @@ module Ruote::Couch
         Ruote::StorageParticipant.matches?(hwi, pname, criteria) }
 
       hwis.collect { |hwi| Ruote::Workitem.new(hwi) }
+    end
+
+    # Returns the design document that goes with this class of database
+    #
+    def self.design_doc
+
+      self.allocate.send(:design_doc)
     end
 
     protected
