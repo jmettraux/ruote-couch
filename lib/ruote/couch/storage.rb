@@ -119,7 +119,20 @@ module Couch
 
     def purge!
 
-      @dbs.values.each { |db| db.purge! }
+      @couch.delete('.')
+      @couch.close
+    end
+
+    # Used when doing integration tests, removes all
+    # msgs, schedules, errors, expressions and workitems.
+    #
+    # NOTE that it doesn't remove engine variables (danger)
+    #
+    def clear
+
+      %w[ msgs schedules errors expressions workitems ].each do |type|
+        @dbs[type].purge!
+      end
     end
 
     def dump (type)
@@ -147,7 +160,7 @@ module Couch
     def purge_type! (type)
 
       if db = @dbs[type]
-        db.purge_docs!
+        db.purge!
       end
     end
 

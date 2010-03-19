@@ -110,20 +110,14 @@ module Ruote::Couch
       @couch.close
     end
 
-    # Deletes database and closes it.
+    # Deletes all the documents in this database.
     #
     def purge!
 
-      @couch.delete('.')
-      @couch.close
-    end
-
-    # Removes all the documents in this database.
-    #
-    def purge_docs!
-
-      @couch.delete('.')
-      @couch.put('.')
+      @couch.get('_all_docs')['rows'].each do |row|
+        doc = { '_id' => row['id'], '_rev' => row['value']['rev'] }
+        @couch.delete(doc) unless doc['_id'].match(/^\_design\//)
+      end
     end
 
     protected

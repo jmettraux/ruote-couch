@@ -4,6 +4,8 @@
 
 == ruote-couch 2.1.9    not yet released
 
+- CouchStorage#clear and purge cleanup
+
 
 == ruote-couch 2.1.8    released 2010/03/15
 

@@ -7,7 +7,5 @@
 
 [ ] jig / r-couch should not rely on exceptions
 
-[ ] re-run suite with --patron
-[ ] run suite with --net
-[ ] run suite with --em
+[ ] issue with cron '* * * * *' and long-polling
 
