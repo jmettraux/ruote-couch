@@ -42,6 +42,21 @@ CouchDB storage for ruote 2.1 (ruby workflow engine)
 end
 Jeweler::GemcutterTasks.new
 
+#
+# MISC
+
+task :delete_all_test_databases do
+
+  require 'json'
+  require 'rufus/jig'
+  couch = Rufus::Jig::Couch.new('127.0.0.1', 5984)
+  %w[
+    configurations errors expressions msgs schedules variables workitems
+  ].each do |type|
+    couch.delete("/test_ruote_#{type}")
+  end
+end
+
 
 #
 # DOC
