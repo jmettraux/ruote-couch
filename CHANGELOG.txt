@@ -2,7 +2,7 @@
 = ruote-couch - CHANGELOG.txt
 
 
-== ruote-couch 2.1.9    not yet released
+== ruote-couch 2.1.9    released 2010/03/22
 
 - trusting rufus-jig : not closing couches anymore
 - CouchStorage#clear and purge cleanup
