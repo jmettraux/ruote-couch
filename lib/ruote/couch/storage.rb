@@ -119,8 +119,8 @@ module Couch
 
     def purge!
 
-      @couch.delete('.')
-      @couch.close
+      @dbs.values.each { |db| db.purge! }
+      #@dbs.values.each { |db| db.shutdown }
     end
 
     # Used when doing integration tests, removes all
@@ -144,7 +144,7 @@ module Couch
 
       @poller.kill if @poller
 
-      @dbs.values.each { |db| db.shutdown }
+      #@dbs.values.each { |db| db.shutdown }
     end
 
     # Mainly used by ruote's test/unit/ut_17_storage.rb

@@ -4,6 +4,7 @@
 
 == ruote-couch 2.1.9    not yet released
 
+- trusting rufus-jig : not closing couches anymore
 - CouchStorage#clear and purge cleanup
 
 

@@ -105,10 +105,10 @@ module Ruote::Couch
       end
     end
 
-    def shutdown
-
-      @couch.close
-    end
+    #def shutdown
+    #  @couch.close
+    #end
+      # jig > 0.1.17 is OK without that
 
     # Deletes all the documents in this database.
     #
@@ -118,6 +118,12 @@ module Ruote::Couch
         doc = { '_id' => row['id'], '_rev' => row['value']['rev'] }
         @couch.delete(doc) unless doc['_id'].match(/^\_design\//)
       end
+        #
+        # which is faster than
+        #
+      #@couch.delete('.')
+      #@couch.put('.')
+      #@couch.http.cache.clear
     end
 
     protected
