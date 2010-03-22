@@ -214,7 +214,12 @@ module Ruote::Couch
     def prepare
 
       d = @couch.get('_design/ruote')
-      @couch.delete(d) if d
+
+      return if d && d['views'] == design_doc['views']
+
+      d ||= design_doc
+      d['views'] = design_doc['views']
+
       @couch.put(design_doc)
     end
   end

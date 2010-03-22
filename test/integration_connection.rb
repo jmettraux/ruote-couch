@@ -17,6 +17,8 @@ end
 
 require 'ruote/couch/storage'
 
+# TODO : maybe place delete_all_test_databases here
+
 
 def new_storage (opts)
 
