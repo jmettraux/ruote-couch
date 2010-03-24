@@ -17,7 +17,18 @@ end
 
 require 'ruote/couch/storage'
 
-# TODO : maybe place delete_all_test_databases here
+
+unless $_RUOTE_COUCH_CLEANED
+
+  couch = Rufus::Jig::Couch.new('127.0.0.1', 5984)
+  %w[
+    configurations errors expressions msgs schedules variables workitems
+  ].each do |type|
+    couch.delete("/test_ruote_#{type}")
+  end
+  puts "(purged all /test_ruote_xxx databases)"
+  $_RUOTE_COUCH_CLEANED = true
+end
 
 
 def new_storage (opts)
