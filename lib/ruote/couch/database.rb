@@ -280,10 +280,9 @@ module Ruote::Couch
 
       hwis = hwis.select { |hwi| hwi['fei']['wfid'] == wfid } if wfid
 
-      hwis = hwis.select { |hwi|
-        Ruote::StorageParticipant.matches?(hwi, pname, criteria) }
-
-      hwis.collect { |hwi| Ruote::Workitem.new(hwi) }
+      hwis.select { |hwi|
+        Ruote::StorageParticipant.matches?(hwi, pname, criteria)
+      }
     end
 
     # Returns the design document that goes with this class of database
