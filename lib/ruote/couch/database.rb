@@ -69,7 +69,13 @@ module Ruote::Couch
 
     def delete (doc)
 
-      @couch.delete(doc)
+      r = @couch.delete(doc)
+
+      #p [ :del, doc['_id'], Thread.current.object_id.to_s[-3..-1], r.nil? ]
+      Thread.pass
+        # without this, test/functional/ct_0 fails after 1 to 10 runs...
+
+      r
     end
 
     def get_many (key, opts)
