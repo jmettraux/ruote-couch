@@ -37,6 +37,8 @@ module Ruote::Couch
 
     attr_reader :type
 
+    attr_reader :couch
+
     def initialize (host, port, type, name)
 
       #opts = { :re_put_ok => re_put_ok }
