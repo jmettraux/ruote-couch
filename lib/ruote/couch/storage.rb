@@ -78,7 +78,8 @@ module Couch
         @host, @port, 'errors', "#{@prefix}ruote_errors")
 
       @dbs['expressions'] = WfidIndexedDatabase.new(
-        @host, @port, 'expressions', "#{@prefix}ruote_expressions", false)
+        #@host, @port, 'expressions', "#{@prefix}ruote_expressions", false)
+        @host, @port, 'expressions', "#{@prefix}ruote_expressions")
 
       @dbs['workitems'] = WorkitemDatabase.new(
         @host, @port, 'workitems', "#{@prefix}ruote_workitems")
@@ -152,7 +153,8 @@ module Couch
     def add_type (type)
 
       @dbs[type] = Database.new(
-        @host, @port, type, "#{@prefix}ruote_#{type}", false)
+        #@host, @port, type, "#{@prefix}ruote_#{type}", false)
+        @host, @port, type, "#{@prefix}ruote_#{type}")
     end
 
     # Nukes a db type and reputs it (losing all the documents that were in it).

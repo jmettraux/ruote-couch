@@ -37,9 +37,10 @@ module Ruote::Couch
 
     attr_reader :type
 
-    def initialize (host, port, type, name, re_put_ok=true)
+    def initialize (host, port, type, name)
 
-      opts = { :re_put_ok => re_put_ok }
+      #opts = { :re_put_ok => re_put_ok }
+      opts = {}
       #opts[:timeout] = TODO
 
       @couch = Rufus::Jig::Couch.new(host, port, name, opts)

@@ -1,11 +1,14 @@
 
 [x] ct_2 --couch says put(gone) is returning nil... :(
 [o] ?feed=longpool&heartbeat=x (parallel thread or smarter scheduler ?)
+[o] remove re_put_ok (rufus-jig >= 0.1.18)
 
 [ ] view for ats
 [ ] view for crons
 
 [ ] jig / r-couch should not rely on exceptions
 
-[ ] issue with cron '* * * * *' and long-polling
+=================================================+
+[ ] issue with cron '* * * * *' and long-polling |
+=================================================+
 
