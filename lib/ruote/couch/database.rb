@@ -93,13 +93,15 @@ module Ruote::Couch
       rs.select { |doc| ! doc['_id'].match(/^\_design\//) }
     end
 
+    DESIGN_DOC_REGEX = /^\_design\//
+
     # Returns a sorted list of the ids of all the docs in this database.
     #
     def ids
 
       rs = @couch.get('_all_docs')
 
-      rs['rows'].collect { |r| r['id'] }
+      rs['rows'].collect { |r| r['id'] }.reject { |i| i.match(DESIGN_DOC_REGEX) }
     end
 
     def dump

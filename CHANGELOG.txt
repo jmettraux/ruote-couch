@@ -4,6 +4,9 @@
 
 == ruote-couch 2.1.10    not yet released
 
+- storage#ids not returning design doc ids anymore
+- now using CouchDB 0.11 continuous&all_docs
+- multi-worker hardened
 - adapted #query_workitems to ruote 2.1.10
 
 
