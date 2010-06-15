@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["John Mettraux"]
-  s.date = %q{2010-05-11}
+  s.date = %q{2010-06-15}
   s.description = %q{CouchDB storage for ruote 2.1 (ruby workflow engine)}
   s.email = %q{jmettraux@gmail.com}
   s.extra_rdoc_files = [
@@ -31,7 +31,7 @@ Gem::Specification.new do |s|
      "test/functional/base.rb",
      "test/functional/ft_0_long_polling.rb",
      "test/functional/test.rb",
-     "test/integration_connection.rb",
+     "test/functional_connection.rb",
      "test/test.rb",
      "test/unit/test.rb",
      "test/unit/ut_0_design_doc.rb"
