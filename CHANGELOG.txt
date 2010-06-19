@@ -2,10 +2,13 @@
 = ruote-couch - CHANGELOG.txt
 
 
+== ruote-couch 2.1.10.1    released 2010/06/15
+
+
 == ruote-couch 2.1.10    released 2010/06/15
 
 - storage#ids not returning design doc ids anymore
-- now using CouchDB 0.11 continuous&all_docs
+- now using CouchDB 0.11 ?feed=continuous&include_docs=true
 - multi-worker hardened
 - adapted #query_workitems to ruote 2.1.10
 

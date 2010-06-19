@@ -47,12 +47,8 @@ module Couch
     # Hooks the storage to a CouchDB instance.
     #
     # The main option is 'couch_prefix', which indicate which prefix should be
-    # added to all the database names used by this storage.
-    #
-    # The option 'couch_timeout' is used what is the get_msgs timeout. This
-    # is the long-polling timeout. For functional test it is set to two seconds
-    # but for a production system, something like 10 minutes or 8 hours might
-    # be OK.
+    # added to all the database names used by this storage. 'prefix' is accepted
+    # as well.
     #
     def initialize (host, port, options={})
 
@@ -63,9 +59,6 @@ module Couch
 
       @prefix = options['couch_prefix'] || options['prefix'] || ''
       @prefix = "#{@prefix}_" if @prefix.size > 0
-
-      #@zeroes = 21 # maybe make it an option
-      @timeout = options['couch_timeout'] || 60
 
       @dbs = {}
 
@@ -87,7 +80,6 @@ module Couch
 
       put_configuration
 
-      #@zero_msgs_offset = @zeroes
       @msgs_thread = nil
       @msgs_queue = ::Queue.new
 

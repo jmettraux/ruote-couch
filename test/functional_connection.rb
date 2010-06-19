@@ -36,8 +36,6 @@ def new_storage (opts)
   opts ||= {}
 
   Ruote::Couch::CouchStorage.new(
-    '127.0.0.1',
-    5984,
-    opts.merge!('couch_prefix' => 'test', 'couch_timeout' => 1))
+    '127.0.0.1', 5984, opts.merge!('couch_prefix' => 'test'))
 end
 
