@@ -226,6 +226,8 @@ module Couch
 
         deleted, s = @schedules_queue.pop
 
+        next unless s
+
         if deleted
           @schedules.delete(s['_id'])
         else
