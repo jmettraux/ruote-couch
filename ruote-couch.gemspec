@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{ruote-couch}
-  s.version = "2.1.10"
+  s.version = "2.1.11"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["John Mettraux"]
-  s.date = %q{2010-06-24}
+  s.date = %q{2010-06-29}
   s.description = %q{CouchDB storage for ruote 2.1 (ruby workflow engine)}
   s.email = %q{jmettraux@gmail.com}
   s.extra_rdoc_files = [
