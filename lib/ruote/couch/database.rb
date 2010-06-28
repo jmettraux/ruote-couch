@@ -77,6 +77,9 @@ module Ruote::Couch
         # without this, test/functional/ct_0 fails after 1 to 10 runs...
 
       r
+
+    rescue Rufus::Jig::TimeoutError => te
+      true
     end
 
     def get_many (key, opts)
