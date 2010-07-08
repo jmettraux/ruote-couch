@@ -126,9 +126,11 @@ module Ruote::Couch
     #
     def purge!
 
+      @couch.http.cache.clear
       @couch.get('_all_docs')['rows'].each do |row|
+        next if row['id'].match(/^\_design\//)
         doc = { '_id' => row['id'], '_rev' => row['value']['rev'] }
-        @couch.delete(doc) unless doc['_id'].match(/^\_design\//)
+        @couch.delete(doc)
       end
         #
         # which is faster than

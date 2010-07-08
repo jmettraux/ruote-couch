@@ -4,6 +4,8 @@
 
 == ruote-couch 2.1.11    not yet released
 
+- a database.purge! that can't be mislead by cache issues
+
 
 == ruote-couch 2.1.10    released 2010/06/15
 
