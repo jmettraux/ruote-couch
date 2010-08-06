@@ -91,7 +91,13 @@ module Ruote::Couch
       rs = rs.select { |doc| doc['_id'].match(key) } if key
         # naive...
 
-      rs.select { |doc| ! doc['_id'].match(/^\_design\//) }
+      rs = rs.select { |doc| ! doc['_id'].match(/^\_design\//) }
+
+      # TODO
+      # maybe _count come be of use here
+      # http://wiki.apache.org/couchdb/Built-In_Reduce_Functions
+
+      opts[:count] ? rs.size : rs
     end
 
     DESIGN_DOC_REGEX = /^\_design\//
@@ -147,11 +153,13 @@ module Ruote::Couch
       # nothing to do for a index-less database
     end
 
-    # (for now, the only option is :limit)
+    # :limit and :skip support
     #
     def query_options (opts)
 
-      opts = opts.select { |k, v| [ :limit, :skip ].include?(k) && v != nil }
+      opts = opts.select { |k, v|
+        [ :limit, :skip ].include?(k) && v != nil
+      }
 
       s = opts.collect { |k, v| "#{k}=#{v}" }.join('&')
 
