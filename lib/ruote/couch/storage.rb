@@ -171,11 +171,11 @@ module Couch
     # A provision made for workitems, allow to query them directly by
     # participant name.
     #
-    def by_participant (type, participant_name)
+    def by_participant (type, participant_name, opts)
 
       raise NotImplementedError if type != 'workitems'
 
-      @dbs['workitems'].by_participant(participant_name)
+      @dbs['workitems'].by_participant(participant_name, opts)
     end
 
     def by_field (type, field, value=nil)
