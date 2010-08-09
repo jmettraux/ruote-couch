@@ -4,7 +4,8 @@
 
 == ruote-couch 2.1.11    not yet released
 
-- workitems.by_participnat() :skip and :limit support
+- adapted for engine.processes pagination
+- workitems.by_participant() :skip and :limit support
 - get_many(x, y, :count => true) support
 - a database.purge! that can't be mislead by cache issues
 

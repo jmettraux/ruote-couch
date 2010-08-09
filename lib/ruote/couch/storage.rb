@@ -62,18 +62,17 @@ module Couch
 
       @dbs = {}
 
-      %w[ msgs schedules configurations variables ].each do |type|
+      %w[ msgs configurations variables ].each do |type|
 
         @dbs[type] = Database.new(
           @host, @port, type, "#{@prefix}ruote_#{type}")
       end
 
-      @dbs['errors'] = WfidIndexedDatabase.new(
-        @host, @port, 'errors', "#{@prefix}ruote_errors")
+      %w[ errors expressions schedules ].each do |type|
 
-      @dbs['expressions'] = WfidIndexedDatabase.new(
-        #@host, @port, 'expressions', "#{@prefix}ruote_expressions", false)
-        @host, @port, 'expressions', "#{@prefix}ruote_expressions")
+        @dbs[type] = WfidIndexedDatabase.new(
+          @host, @port, type, "#{@prefix}ruote_#{type}")
+      end
 
       @dbs['workitems'] = WorkitemDatabase.new(
         @host, @port, 'workitems', "#{@prefix}ruote_workitems")
@@ -235,7 +234,7 @@ module Couch
         end
       end
 
-      filter_schedules(@schedules.values, now)
+      filter_schedules(@schedules.values.reject { |sch| sch['at'].nil? }, now)
     end
 
     protected

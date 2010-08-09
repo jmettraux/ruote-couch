@@ -82,33 +82,48 @@ module Ruote::Couch
       true
     end
 
+    # Used by #get_many and #ids when filtering design documents out of
+    # '_all_docs'.
+    #
+    DESIGN_DOC_REGEX = /^\_design\//
+
+    # The get_many used by msgs, configurations and variables.
+    #
     def get_many (key, opts)
+
+      return @couch.get('_all_docs')['rows'].reject { |row|
+        row['id'].match(/^\_design\//)
+      }.size if opts[:count]
 
       rs = @couch.get("_all_docs?include_docs=true#{query_options(opts)}")
 
       rs = rs['rows'].collect { |e| e['doc'] }
 
-      rs = rs.select { |doc| doc['_id'].match(key) } if key
-        # naive...
+      if key
 
-      rs = rs.select { |doc| ! doc['_id'].match(/^\_design\//) }
+        keys = Array(key)
+        keys = keys.collect { |k| "!#{k}" } if keys.first.is_a?(String)
+
+        rs = rs.select { |doc| Ruote::StorageBase.key_match?(keys, doc) }
+          # naive... WfidIndexedDatabase has a better implementation
+      end
+
+      rs.reject { |doc| DESIGN_DOC_REGEX.match(doc['_id']) }
 
       # TODO
       # maybe _count come be of use here
       # http://wiki.apache.org/couchdb/Built-In_Reduce_Functions
-
-      opts[:count] ? rs.size : rs
     end
-
-    DESIGN_DOC_REGEX = /^\_design\//
 
     # Returns a sorted list of the ids of all the docs in this database.
     #
     def ids
 
-      rs = @couch.get('_all_docs')
-
-      rs['rows'].collect { |r| r['id'] }.reject { |i| i.match(DESIGN_DOC_REGEX) }
+      @couch.get('_all_docs')['rows'].collect { |r|
+        r['id']
+      }.reject { |i|
+        DESIGN_DOC_REGEX.match(i)
+      }
     end
 
     def dump
@@ -157,9 +172,7 @@ module Ruote::Couch
     #
     def query_options (opts)
 
-      opts = opts.select { |k, v|
-        [ :limit, :skip ].include?(k) && v != nil
-      }
+      opts = opts.select { |k, v| [ :limit, :skip ].include?(k) && v != nil }
 
       s = opts.collect { |k, v| "#{k}=#{v}" }.join('&')
 
@@ -188,14 +201,21 @@ module Ruote::Couch
   #
   class WfidIndexedDatabase < Database
 
+    # The get_many used by errors, expressions and schedules.
+    #
     def get_many (key, opts)
 
-      if key && m = key.source.match(/!?(.+)\$$/)
-        # let's use the couch view...
+      if key.is_a?(String)
 
         query(
-          "_design/ruote/_view/by_wfid?key=%22#{m[1]}%22" +
+          "_design/ruote/_view/by_wfid?key=%22#{key}%22" +
           "&include_docs=true#{query_options(opts)}")
+
+      elsif key.is_a?(Array) && key.first.is_a?(String)
+
+        query_by_post(
+          "_design/ruote/_view/by_wfid?include_docs=true#{query_options(opts)}",
+          key)
 
       else
         # let's use the naive default implementation
