@@ -168,11 +168,15 @@ module Ruote::Couch
       # nothing to do for a index-less database
     end
 
+    # These options are known and passed to CouchDB.
+    #
+    QUERY_OPTIONS = [ :skip, :limit, :descending ]
+
     # :limit and :skip support
     #
     def query_options (opts)
 
-      opts = opts.select { |k, v| [ :limit, :skip ].include?(k) && v != nil }
+      opts = opts.select { |k, v| QUERY_OPTIONS.include?(k) && v != nil }
 
       s = opts.collect { |k, v| "#{k}=#{v}" }.join('&')
 

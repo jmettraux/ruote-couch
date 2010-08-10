@@ -12,3 +12,5 @@
 [ ] issue with cron '* * * * *' and long-polling |
 =================================================+
 
+[ ] storage.close
+

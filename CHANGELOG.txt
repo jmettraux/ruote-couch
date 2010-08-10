@@ -4,6 +4,7 @@
 
 == ruote-couch 2.1.11    not yet released
 
+- get_many(x, y, :descending => true) support
 - adapted for engine.processes pagination
 - workitems.by_participant() :skip and :limit support
 - get_many(x, y, :count => true) support
