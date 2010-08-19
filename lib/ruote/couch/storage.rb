@@ -186,7 +186,11 @@ module Couch
 
     def query_workitems (criteria)
 
-      @dbs['workitems'].query_workitems(criteria)
+      count = criteria.delete('count')
+
+      result = @dbs['workitems'].query_workitems(criteria)
+
+      count ? result.size : result.collect { |h| Ruote::Workitem.new(h) }
     end
 
     # Overwriting Ruote::StorageBase.get_msgs

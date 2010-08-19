@@ -313,8 +313,7 @@ module Ruote::Couch
         return by_wfid(wfid) # if wfid
       end
 
-      return get_many(nil, {}).collect { |hwi| Ruote::Workitem.new(hwi) } \
-        if criteria.empty?
+      return get_many(nil, {}) if criteria.empty?
 
       cr = criteria.collect { |fname, fvalue| { fname => fvalue } }
 
