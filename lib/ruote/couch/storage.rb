@@ -122,18 +122,6 @@ module Couch
       #@dbs.values.each { |db| db.shutdown }
     end
 
-    # Used when doing integration tests, removes all
-    # msgs, schedules, errors, expressions and workitems.
-    #
-    # NOTE that it doesn't remove engine variables (danger)
-    #
-    def clear
-
-      %w[ msgs schedules errors expressions workitems ].each do |type|
-        @dbs[type].purge!
-      end
-    end
-
     def dump (type)
 
       @dbs[type].dump
