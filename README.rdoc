@@ -5,7 +5,7 @@ A storage implementation for ruote 2.1.x.
 
 Warning : this is a very naive implementation for now. Not many optimizations...
 
-Note : CouchDB >= 0.11
+Note : CouchDB >= 1.0.1
 
 
 == running tests

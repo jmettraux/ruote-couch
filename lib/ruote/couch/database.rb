@@ -82,33 +82,29 @@ module Ruote::Couch
       true
     end
 
-    # Used by #get_many and #ids when filtering design documents out of
-    # '_all_docs'.
-    #
-    DESIGN_DOC_REGEX = /^\_design\//
-
     # The get_many used by msgs, configurations and variables.
     #
     def get_many (key, opts)
 
-      return @couch.get('_all_docs')['rows'].reject { |row|
-        row['id'].match(/^\_design\//)
-      }.size if opts[:count]
+      return query('_all_docs?include_docs=true') if ( ! key) && opts.size < 1
 
-      rs = @couch.get("_all_docs?include_docs=true#{query_options(opts)}")
+      is = ids
 
-      rs = rs['rows'].collect { |e| e['doc'] }
+      return is.length if opts[:count]
+
+      is = is.reverse if opts[:descending]
 
       if key
-
-        keys = Array(key)
-        keys = keys.collect { |k| "!#{k}" } if keys.first.is_a?(String)
-
-        rs = rs.select { |doc| Ruote::StorageBase.key_match?(keys, doc) }
-          # naive... WfidIndexedDatabase has a better implementation
+        keys = Array(key).map { |k| k.is_a?(String) ? "!#{k}" : k }
+        is = is.select { |i| Ruote::StorageBase.key_match?(keys, i) }
       end
 
-      rs.reject { |doc| DESIGN_DOC_REGEX.match(doc['_id']) }
+      skip = opts[:skip] || 0
+      limit = opts[:limit] || is.length
+
+      is = is[skip, limit]
+
+      query_by_post('_all_docs?include_docs=true', is)
 
       # TODO
       # maybe _count come be of use here
@@ -183,11 +179,21 @@ module Ruote::Couch
       s.length > 0 ? "&#{s}" : ''
     end
 
+    # Used by #get_many and #ids when filtering design documents out of
+    # '_all_docs'.
+    #
+    DESIGN_DOC_REGEX = /^\_design\//
+
+    def filter_design_docs (docs)
+
+      docs.reject { |d| DESIGN_DOC_REGEX.match(d['_id']) }
+    end
+
     def query (uri)
 
       rs = @couch.get(uri)
 
-      rs['rows'].collect { |e| e['doc'] }
+      filter_design_docs(rs['rows'].collect { |e| e['doc'] })
     end
 
     def query_by_post (uri, keys)
@@ -196,7 +202,7 @@ module Ruote::Couch
 
       rs = @couch.post(uri, keys)
 
-      rs['rows'].collect { |e| e['doc'] }.uniq
+      filter_design_docs(rs['rows'].collect { |e| e['doc'] }.uniq)
     end
   end
 
@@ -209,30 +215,19 @@ module Ruote::Couch
     #
     def get_many (key, opts)
 
-      if key.is_a?(String)
+      return super(key, opts) unless key.is_a?(String)
 
-        query(
-          "_design/ruote/_view/by_wfid?key=%22#{key}%22" +
-          "&include_docs=true#{query_options(opts)}")
+      # key is a wfid
 
-      elsif key.is_a?(Array) && key.first.is_a?(String)
-
-        query_by_post(
-          "_design/ruote/_view/by_wfid?include_docs=true#{query_options(opts)}",
-          key)
-
-      else
-        # let's use the naive default implementation
-
-        super
-      end
+      query("_design/ruote/_view/by_wfid?key=%22#{key}%22&include_docs=true")
     end
 
     # Used by WorkitemDatabase#query
     #
     def by_wfid (wfid)
 
-      get_many(/!#{wfid}$/, {})
+      #get_many(/!#{wfid}$/, {})
+      get_many(wfid, {})
     end
 
     # Returns the design document that goes with this class of database
@@ -250,8 +245,12 @@ module Ruote::Couch
         '_id' => '_design/ruote',
         'views' => {
           'by_wfid' => {
-            'map' =>
-              'function (doc) { if (doc.fei) emit(doc.fei.wfid, null); }'
+            'map' => %{
+              function (doc) {
+                if (doc.wfid) emit(doc.wfid, null);
+                else if (doc.fei) emit(doc.fei.wfid, null);
+              }
+            }
           }
         }
       }
