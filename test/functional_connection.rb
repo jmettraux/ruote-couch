@@ -10,7 +10,8 @@ require 'rufus-json'
 Rufus::Json.detect_backend
 
 begin
-  require 'patron' unless ARGV.include?('--net')
+  #require 'patron' unless ARGV.include?('--net')
+  require 'patron' if ARGV.include?('--patron')
 rescue LoadError
   # then use 'net/http'
 end
