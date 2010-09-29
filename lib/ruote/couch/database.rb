@@ -132,10 +132,12 @@ module Ruote::Couch
       end
     end
 
-    #def shutdown
-    #  @couch.close
-    #end
-      # jig > 0.1.17 is OK without that
+    # Makes sure to close the HTTP connection down.
+    #
+    def shutdown
+
+      @couch.close
+    end
 
     # Deletes all the documents in this database.
     #

@@ -132,9 +132,7 @@ module Couch
 
     def shutdown
 
-      #@dbs.values.each { |db| db.shutdown }
-
-      #@poller.kill if @poller
+      @dbs.values.each { |db| db.shutdown }
 
       @msgs_thread.kill rescue nil
       @schedules_thread.kill rescue nil
