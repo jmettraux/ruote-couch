@@ -50,14 +50,17 @@ module Couch
     # added to all the database names used by this storage. 'prefix' is accepted
     # as well.
     #
-    def initialize (host, port, options={})
+    def initialize (*args)
 
-      @host = host
-      @port = port
+      hc = Rufus::Jig::HttpCore.new(*args)
+        # leverage the argument parsing logic in there
 
-      @options = options
+      @host = hc.host
+      @port = hc.port
 
-      @prefix = options['couch_prefix'] || options['prefix'] || ''
+      @options = hc.options
+
+      @prefix = hc.options['couch_prefix'] || hc.options['prefix'] || ''
       @prefix = "#{@prefix}_" if @prefix.size > 0
 
       @dbs = {}
@@ -65,17 +68,17 @@ module Couch
       %w[ msgs configurations variables ].each do |type|
 
         @dbs[type] = Database.new(
-          @host, @port, type, "#{@prefix}ruote_#{type}")
+          @host, @port, type, "#{@prefix}ruote_#{type}", @options)
       end
 
       %w[ errors expressions schedules ].each do |type|
 
         @dbs[type] = WfidIndexedDatabase.new(
-          @host, @port, type, "#{@prefix}ruote_#{type}")
+          @host, @port, type, "#{@prefix}ruote_#{type}", @options)
       end
 
       @dbs['workitems'] = WorkitemDatabase.new(
-        @host, @port, 'workitems', "#{@prefix}ruote_workitems")
+        @host, @port, 'workitems', "#{@prefix}ruote_workitems", @options)
 
       put_configuration
 
@@ -188,9 +191,14 @@ module Couch
     #
     def get_msgs
 
+      mt = @msgs_thread
+
       ensure_msgs_thread_is_running
 
       msgs = []
+      2.times { msgs = get_many('msgs') } if mt != @msgs_thread
+        #
+        # seems necessary to avoid any msgs leak :-(
 
       while @msgs_queue.size > 0
         msgs << @msgs_queue.pop

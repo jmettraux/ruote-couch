@@ -39,9 +39,7 @@ module Ruote::Couch
 
     attr_reader :couch
 
-    def initialize (host, port, type, name)
-
-      opts = {}
+    def initialize (host, port, type, name, opts={})
 
       @couch = Rufus::Jig::Couch.new(host, port, name, opts)
 
