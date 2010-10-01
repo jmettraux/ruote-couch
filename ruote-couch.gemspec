@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     "CHANGELOG.txt",
+     "CREDITS.txt",
      "LICENSE.txt",
      "README.rdoc",
      "Rakefile",

@@ -1,0 +1,18 @@
+
+= ruote-couch CREDITS.txt
+
+
+== authors
+
+- John Mettraux - http://github.com/jmettraux
+
+
+== contributors
+
+- Torsten Schoenebaum - http://github.com/tosch
+
+
+== many thanks to
+
+- the CouchDB team for their great project
+
