@@ -2,7 +2,7 @@
 = ruote-couch - CHANGELOG.txt
 
 
-== ruote-couch 2.1.11    not yet released
+== ruote-couch 2.1.11    released 2010/10/01
 
 - storage#shutdown back in business (for the sake of tests mostly)
 - get_many(x, y, :descending => true) support
