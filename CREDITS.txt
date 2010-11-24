@@ -12,6 +12,11 @@
 - Torsten Schoenebaum - http://github.com/tosch
 
 
+== feedback
+
+- Claudio Petasecca Donati - https://github.com/etapeta
+
+
 == many thanks to
 
 - the CouchDB team for their great project

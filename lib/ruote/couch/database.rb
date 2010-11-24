@@ -159,9 +159,11 @@ module Ruote::Couch
 
     protected
 
+
+    # Well, empty. Nothing to do for a index-less database
+    #
     def prepare
 
-      # nothing to do for a index-less database
     end
 
     # These options are known and passed to CouchDB.
@@ -184,25 +186,29 @@ module Ruote::Couch
     #
     DESIGN_DOC_REGEX = /^\_design\//
 
-    def filter_design_docs (docs)
+    # Weed out nil docs (freshly deleted documents) and design documents)
+    #
+    def filter_docs (result_set)
 
-      docs.reject { |d| DESIGN_DOC_REGEX.match(d['_id']) }
+      result_set['rows'].collect { |e|
+        e['doc']
+      }.uniq.reject { |d|
+        d.nil? || DESIGN_DOC_REGEX.match(d['_id'])
+      }
     end
 
+    # GET query
+    #
     def query (uri)
 
-      rs = @couch.get(uri)
-
-      filter_design_docs(rs['rows'].collect { |e| e['doc'] })
+      filter_docs(@couch.get(uri))
     end
 
+    # POST query
+    #
     def query_by_post (uri, keys)
 
-      keys = { 'keys' => keys }
-
-      rs = @couch.post(uri, keys)
-
-      filter_design_docs(rs['rows'].collect { |e| e['doc'] }.uniq)
+      filter_docs(@couch.post(uri, { 'keys' => keys }))
     end
   end
 

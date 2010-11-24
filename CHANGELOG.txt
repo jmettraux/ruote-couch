@@ -2,6 +2,12 @@
 = ruote-couch - CHANGELOG.txt
 
 
+== ruote-couch 2.1.12    not yet released
+
+- engine.process(wfid) : fixed issue with freshly deleted documents
+  (Thanks Claudio)
+
+
 == ruote-couch 2.1.11    released 2010/10/01
 
 - storage#shutdown back in business (for the sake of tests mostly)
