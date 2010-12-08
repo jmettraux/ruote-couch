@@ -22,8 +22,6 @@
 # Made in Japan.
 #++
 
-require 'cgi'
-
 
 module Ruote::Couch
 
@@ -36,7 +34,6 @@ module Ruote::Couch
   class Database
 
     attr_reader :type
-
     attr_reader :couch
 
     def initialize (host, port, type, name, opts={})
@@ -84,11 +81,14 @@ module Ruote::Couch
     #
     def get_many (key, opts)
 
-      return query('_all_docs?include_docs=true') if ( ! key) && opts.size < 1
+      if key.nil? && opts.empty?
+        return @couch.all(:include_design_docs => false)
+      end
 
       is = ids
 
       return is.length if opts[:count]
+      return [] if is.empty?
 
       is = is.reverse if opts[:descending]
 
@@ -102,22 +102,17 @@ module Ruote::Couch
 
       is = is[skip, limit]
 
-      query_by_post('_all_docs?include_docs=true', is)
+      #return [] if is.empty?
+        # not necessary at this point, jig provides already this optimization.
 
-      # TODO
-      # maybe _count come be of use here
-      # http://wiki.apache.org/couchdb/Built-In_Reduce_Functions
+      @couch.all(:keys => is)
     end
 
     # Returns a sorted list of the ids of all the docs in this database.
     #
     def ids
 
-      @couch.get('_all_docs')['rows'].collect { |r|
-        r['id']
-      }.reject { |i|
-        DESIGN_DOC_REGEX.match(i)
-      }
+      @couch.ids(:include_design_docs => false)
     end
 
     def dump
@@ -143,12 +138,14 @@ module Ruote::Couch
     #
     def purge!
 
-      @couch.http.cache.clear
-      @couch.get('_all_docs')['rows'].each do |row|
-        next if row['id'].match(/^\_design\//)
-        doc = { '_id' => row['id'], '_rev' => row['value']['rev'] }
-        @couch.delete(doc)
-      end
+      #@couch.http.cache.clear
+      #@couch.all(
+      #  :include_docs => false, :include_design_docs => false
+      #).each do |doc|
+      #  @couch.delete(doc)
+      #end
+      docs = @couch.all(:include_docs => false, :include_design_docs => false)
+      @couch.bulk_delete(docs)
         #
         # which is faster than
         #
@@ -159,56 +156,9 @@ module Ruote::Couch
 
     protected
 
-
     # Well, empty. Nothing to do for a index-less database
     #
     def prepare
-
-    end
-
-    # These options are known and passed to CouchDB.
-    #
-    QUERY_OPTIONS = [ :skip, :limit, :descending ]
-
-    # :limit and :skip support
-    #
-    def query_options (opts)
-
-      opts = opts.select { |k, v| QUERY_OPTIONS.include?(k) && v != nil }
-
-      s = opts.collect { |k, v| "#{k}=#{v}" }.join('&')
-
-      s.length > 0 ? "&#{s}" : ''
-    end
-
-    # Used by #get_many and #ids when filtering design documents out of
-    # '_all_docs'.
-    #
-    DESIGN_DOC_REGEX = /^\_design\//
-
-    # Weed out nil docs (freshly deleted documents) and design documents)
-    #
-    def filter_docs (result_set)
-
-      result_set['rows'].collect { |e|
-        e['doc']
-      }.uniq.reject { |d|
-        d.nil? || DESIGN_DOC_REGEX.match(d['_id'])
-      }
-    end
-
-    # GET query
-    #
-    def query (uri)
-
-      filter_docs(@couch.get(uri))
-    end
-
-    # POST query
-    #
-    def query_by_post (uri, keys)
-
-      filter_docs(@couch.post(uri, { 'keys' => keys }))
     end
   end
 
@@ -225,14 +175,13 @@ module Ruote::Couch
 
       # key is a wfid
 
-      query("_design/ruote/_view/by_wfid?key=%22#{key}%22&include_docs=true")
+      @couch.query_for_docs('ruote:by_wfid', :key => key)
     end
 
     # Used by WorkitemDatabase#query
     #
     def by_wfid (wfid)
 
-      #get_many(/!#{wfid}$/, {})
       get_many(wfid, {})
     end
 
@@ -273,6 +222,21 @@ module Ruote::Couch
 
       @couch.put(design_doc)
     end
+
+    #--
+    #def try (&block)
+    #  try = 0
+    #  begin
+    #    try = try + 1
+    #    block.call
+    #  rescue Rufus::Jig::HttpError => he
+    #    raise he
+    #  rescue
+    #    retry unless try > 1
+    #  end
+    #end
+      # keeping it frozen for now
+      #++
   end
 
   #
@@ -285,20 +249,17 @@ module Ruote::Couch
     def by_field (field, value=nil, opts={})
 
       field = { field => value } if value
-      field = CGI.escape(Rufus::Json.encode(field))
 
-      query(
-        "_design/ruote/_view/by_field?key=#{field}" +
-        "&include_docs=true#{query_options(opts)}")
+      @couch.query_for_docs(
+        'ruote:by_field', opts.merge(:key => field))
     end
 
     # This method is called by CouchStorage#by_participant
     #
     def by_participant (name, opts={})
 
-      query(
-        "_design/ruote/_view/by_participant_name?key=%22#{name}%22" +
-        "&include_docs=true#{query_options(opts)}")
+      @couch.query_for_docs(
+        'ruote:by_participant_name', opts.merge(:key => name))
     end
 
     # This method is called by CouchStorage#query
@@ -324,9 +285,7 @@ module Ruote::Couch
 
       opts = { :skip => offset, :limit => limit }
 
-      hwis = query_by_post(
-        "_design/ruote/_view/by_field?include_docs=true#{query_options(opts)}",
-        cr)
+      hwis = @couch.query_for_docs('ruote:by_field', opts.merge(:keys => cr))
 
       hwis = hwis.select { |hwi| hwi['fei']['wfid'] == wfid } if wfid
 

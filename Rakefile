@@ -33,8 +33,9 @@ CouchDB storage for ruote 2.1 (ruby workflow engine)
   gem.test_file = 'test/test.rb'
 
   #gem.add_dependency 'ruote', ">= #{Ruote::Couch::VERSION}"
-  gem.add_dependency 'ruote', ">= 2.1.11"
-  gem.add_dependency 'rufus-jig', '>= 0.1.23'
+  gem.add_dependency 'ruote', '>= 2.1.11'
+  gem.add_dependency 'rufus-jig', '>= 1.0.0'
+
   gem.add_development_dependency 'yard'
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'jeweler'
