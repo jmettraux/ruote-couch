@@ -202,6 +202,14 @@ module Couch
         msgs << @msgs_queue.pop
       end
 
+      if msgs.empty? && Time.now.min != @msgs_last_min
+        #
+        # once per minute, do a regular get, to avoid lost msgs
+        #
+        msgs = get_many('msgs')
+        @msgs_last_min = Time.now.min
+      end
+
       msgs
     end
 
