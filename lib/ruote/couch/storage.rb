@@ -84,10 +84,12 @@ module Couch
 
       @msgs_thread = nil
       @msgs_queue = ::Queue.new
+      @msgs_last_min = nil
 
       @schedules_thread = nil
       @schedules_queue = ::Queue.new
-      @schedules = nil
+      @schedules = {}
+      @schedules_last_min = nil
     end
 
     def put (doc, opts={})
@@ -217,16 +219,6 @@ module Couch
 
       ensure_schedules_thread_is_running
 
-      if @schedules.nil?
-
-        # NOTE : the problem with this approach is that ALL the schedules
-        # are stored in memory. Most of the time it's not a problem, but
-        # for people will lots of schedules...
-
-        @schedules = get_many('schedules')
-        @schedules = @schedules.inject({}) { |h, s| h[s['_id']] = s; h }
-      end
-
       while @schedules_queue.size > 0
 
         deleted, s = @schedules_queue.pop
@@ -238,6 +230,15 @@ module Couch
         else
           @schedules[s['_id']] = s
         end
+      end
+
+      if Time.now.min != @schedules_last_min
+        #
+        # once per minute, do a regular get, to avoid lost schedules
+        #
+        @schedules = get_many('schedules')
+        @schedules = @schedules.inject({}) { |h, s| h[s['_id']] = s; h }
+        @schedules_last_min = Time.now.min
       end
 
       filter_schedules(@schedules.values.reject { |sch| sch['at'].nil? }, now)
