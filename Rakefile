@@ -1,72 +1,53 @@
 
-require 'rubygems'
-require 'rake'
+$:.unshift('.') # 1.9.2
 
-require 'lib/ruote/couch/version.rb'
+require 'rubygems'
+
+require 'rake'
+require 'rake/clean'
+require 'rake/rdoctask'
+
 
 #
-# CLEAN
+# clean
 
-require 'rake/clean'
-CLEAN.include('pkg', 'tmp', 'html')
+CLEAN.include('pkg', 'rdoc')
+
 task :default => [ :clean ]
 
 
 #
-# GEM
+# gem
 
-require 'jeweler'
+GEMSPEC_FILE = Dir['*.gemspec'].first
+GEMSPEC = eval(File.read(GEMSPEC_FILE))
+GEMSPEC.validate
 
-Jeweler::Tasks.new do |gem|
 
-  gem.version = Ruote::Couch::VERSION
-  gem.name = 'ruote-couch'
-  gem.summary = 'CouchDB storage for ruote 2.1'
-  gem.description = %{
-CouchDB storage for ruote 2.1 (ruby workflow engine)
-  }.strip
-  gem.email = 'jmettraux@gmail.com'
-  gem.homepage = 'http://github.com/jmettraux/ruote-couch'
-  gem.authors = [ 'John Mettraux' ]
-  gem.rubyforge_project = 'ruote'
+desc %{
+  builds the gem and places it in pkg/
+}
+task :build do
 
-  gem.test_file = 'test/test.rb'
-
-  #gem.add_dependency 'ruote', ">= #{Ruote::Couch::VERSION}"
-  gem.add_dependency 'ruote', '>= 2.1.11'
-  gem.add_dependency 'rufus-jig', '>= 1.0.0'
-
-  gem.add_development_dependency 'yard'
-  gem.add_development_dependency 'rake'
-  gem.add_development_dependency 'jeweler'
-
-  # gemspec spec : http://www.rubygems.org/read/chapter/20
+  sh "gem build #{GEMSPEC_FILE}"
+  sh "mkdir pkg" rescue nil
+  sh "mv #{GEMSPEC.name}-#{GEMSPEC.version}.gem pkg/"
 end
-Jeweler::GemcutterTasks.new
 
-#
-# MISC
+desc %{
+  builds the gem and pushes it to rubygems.org
+}
+task :push => :build do
 
-task :delete_all_test_databases do
-
-  require 'json'
-  require 'rufus/jig'
-  couch = Rufus::Jig::Couch.new('127.0.0.1', 5984)
-  %w[
-    configurations errors expressions msgs schedules variables workitems
-  ].each do |type|
-    couch.delete("/test_ruote_#{type}")
-  end
+  sh "gem push pkg/#{GEMSPEC.name}-#{GEMSPEC.version}.gem"
 end
 
 
 #
-# DOC
-
+# rdoc
 #
 # make sure to have rdoc 2.5.x to run that
-#
-require 'rake/rdoctask'
+
 Rake::RDocTask.new do |rd|
 
   rd.main = 'README.rdoc'
@@ -75,13 +56,16 @@ Rake::RDocTask.new do |rd|
   rd.rdoc_files.include(
     'README.rdoc', 'CHANGELOG.txt', 'CREDITS.txt', 'lib/**/*.rb')
 
-  rd.title = "ruote-couch #{Ruote::Couch::VERSION}"
+  rd.title = "#{GEMSPEC.name} #{GEMSPEC.version}"
 end
 
 
 #
-# TO THE WEB
+# upload_rdoc
 
+desc %{
+  upload the rdoc to rubyforge
+}
 task :upload_rdoc => [ :clean, :rdoc ] do
 
   account = 'jmettraux@rubyforge.org'
