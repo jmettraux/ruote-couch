@@ -261,10 +261,17 @@ module Couch
       return if status == 'run' || status == 'sleep'
 
       @msgs_thread = Thread.new do
-        @dbs['msgs'].couch.on_change do |_, deleted, doc|
-          @msgs_queue << doc unless deleted
+        while true # long polling should just run forever so retry if anything goes wrong
+          begin
+            @dbs['msgs'].couch.on_change do |_, deleted, doc|
+              @msgs_queue << doc unless deleted
+            end
+          rescue
+            retry
+          end
         end
       end
+      
     end
 
     def ensure_schedules_thread_is_running
@@ -272,12 +279,20 @@ module Couch
       status = @schedules_thread ? @schedules_thread.status : -1
       return if status == 'run' || status == 'sleep'
 
+        
       @schedules_thread = Thread.new do
-        @dbs['schedules'].couch.on_change do |_, deleted, doc|
-          @schedules_queue << [ deleted, doc ]
+        while true # long polling should just run forever so retry if anything goes wrong
+          begin
+            @dbs['schedules'].couch.on_change do |_, deleted, doc|
+              @schedules_queue << [ deleted, doc ]
+            end
+          rescue
+            retry
+          end
         end
       end
     end
+    
   end
 end
 end
