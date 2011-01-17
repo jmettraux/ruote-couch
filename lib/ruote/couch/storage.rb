@@ -262,11 +262,16 @@ module Couch
 
       @msgs_thread = Thread.new do
         while true # long polling should just run forever so retry if anything goes wrong
+          retry_count = 0; last_try = Time.now # keep track of retry attempts
           begin
             @dbs['msgs'].couch.on_change do |_, deleted, doc|
               @msgs_queue << doc unless deleted
             end
           rescue
+            # count retries in the last minute only
+            (retry_count = 1; last_try = Time.now) if Time.now - last_try > 60
+            raise if retry_count > 10 # retry up to 10 times per minute, fail after that
+            retry_count += 1
             retry
           end
         end
@@ -282,11 +287,16 @@ module Couch
         
       @schedules_thread = Thread.new do
         while true # long polling should just run forever so retry if anything goes wrong
+          retry_count = 0; last_try = Time.now # keep track of retry attempts
           begin
             @dbs['schedules'].couch.on_change do |_, deleted, doc|
               @schedules_queue << [ deleted, doc ]
             end
-          rescue
+          rescue => e
+            # count retries in the last minute only
+            (retry_count = 1; last_try = Time.now) if Time.now - last_try > 60
+            raise if retry_count > 10 # retry up to 10 times per minute, fail after that
+            retry_count += 1
             retry
           end
         end
