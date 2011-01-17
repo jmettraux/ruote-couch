@@ -292,7 +292,7 @@ module Couch
             @dbs['schedules'].couch.on_change do |_, deleted, doc|
               @schedules_queue << [ deleted, doc ]
             end
-          rescue => e
+          rescue
             # count retries in the last minute only
             (retry_count = 1; last_try = Time.now) if Time.now - last_try > 60
             raise if retry_count > 10 # retry up to 10 times per minute, fail after that
