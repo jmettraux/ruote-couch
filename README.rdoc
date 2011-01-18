@@ -19,13 +19,13 @@ assuming you have
 
 get into ruote/ and do
 
-  ruby test/unit/storage.rb --couch
+  ruby test/unit/storage.rb -- --couch
 
 * functional tests :
 
 get into ruote/ and do
 
-  ruby test/functional/test.rb --couch
+  ruby test/functional/test.rb -- --couch
 
 
 == license

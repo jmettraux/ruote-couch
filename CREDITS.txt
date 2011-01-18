@@ -9,6 +9,7 @@
 
 == contributors
 
+- Sean Johnson - https://github.com/belucid
 - Torsten Schoenebaum - http://github.com/tosch
 
 

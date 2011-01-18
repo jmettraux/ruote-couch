@@ -82,11 +82,11 @@ module Couch
 
       put_configuration
 
-      @msgs_thread = nil
+      @poll_threads = {}
+
       @msgs_queue = ::Queue.new
       @msgs_last_min = nil
 
-      @schedules_thread = nil
       @schedules_queue = ::Queue.new
       @schedules = {}
       @schedules_last_min = nil
@@ -135,9 +135,7 @@ module Couch
     def shutdown
 
       @dbs.values.each { |db| db.shutdown }
-
-      @msgs_thread.kill rescue nil
-      @schedules_thread.kill rescue nil
+      @poll_threads.values.each { |t| t.kill rescue nil }
     end
 
     # Mainly used by ruote's test/unit/ut_17_storage.rb
@@ -191,12 +189,12 @@ module Couch
     #
     def get_msgs
 
-      mt = @msgs_thread
+      mt = @poll_threads['msgs']
 
       ensure_msgs_thread_is_running
 
       msgs = []
-      2.times { msgs = get_many('msgs') } if mt != @msgs_thread
+      2.times { msgs = get_many('msgs') } if mt != @poll_threads['msgs']
         #
         # seems necessary to avoid any msgs leak :-(
 
@@ -255,54 +253,33 @@ module Couch
       put(conf)
     end
 
+    def ensure_poll_thread_is_running (doctype, &block)
+
+      if t = @poll_threads[doctype]
+        return if t.status == 'run' || t.status == 'sleep' # thread is OK
+      end
+
+      # create or revive thread....
+
+      @poll_threads[doctype] = Thread.new do
+
+        @dbs[doctype].couch.on_change(&block) rescue nil
+      end
+    end
+
     def ensure_msgs_thread_is_running
 
-      status = @msgs_thread ? @msgs_thread.status : -1
-      return if status == 'run' || status == 'sleep'
-
-      @msgs_thread = Thread.new do
-        while true # long polling should just run forever so retry if anything goes wrong
-          retry_count = 0; last_try = Time.now # keep track of retry attempts
-          begin
-            @dbs['msgs'].couch.on_change do |_, deleted, doc|
-              @msgs_queue << doc unless deleted
-            end
-          rescue
-            # count retries in the last minute only
-            (retry_count = 1; last_try = Time.now) if Time.now - last_try > 60
-            raise if retry_count > 10 # retry up to 10 times per minute, fail after that
-            retry_count += 1
-            retry
-          end
-        end
+      ensure_poll_thread_is_running 'msgs' do |_, deleted, doc|
+        @msgs_queue << doc unless deleted
       end
-      
     end
 
     def ensure_schedules_thread_is_running
 
-      status = @schedules_thread ? @schedules_thread.status : -1
-      return if status == 'run' || status == 'sleep'
-
-        
-      @schedules_thread = Thread.new do
-        while true # long polling should just run forever so retry if anything goes wrong
-          retry_count = 0; last_try = Time.now # keep track of retry attempts
-          begin
-            @dbs['schedules'].couch.on_change do |_, deleted, doc|
-              @schedules_queue << [ deleted, doc ]
-            end
-          rescue
-            # count retries in the last minute only
-            (retry_count = 1; last_try = Time.now) if Time.now - last_try > 60
-            raise if retry_count > 10 # retry up to 10 times per minute, fail after that
-            retry_count += 1
-            retry
-          end
-        end
+      ensure_poll_thread_is_running 'schedules' do |_, deleted, doc|
+        @schedules_queue << [ deleted, doc ]
       end
     end
-    
   end
 end
 end
