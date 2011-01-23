@@ -41,8 +41,20 @@ unless $_RUOTE_COUCH_CLEANED
   %w[
     configurations errors expressions msgs schedules variables workitems
   ].each do |type|
-    couch.delete("/test_ruote_#{type}")
+
+    count = 0
+
+    begin
+
+      count = count + 1
+      couch.delete("/test_ruote_#{type}")
+
+    rescue Rufus::Jig::TimeoutError => te
+      retry unless count > 1
+      raise te
+    end
   end
+
   puts "(purged all /test_ruote_xxx databases)"
   $_RUOTE_COUCH_CLEANED = true
 end
