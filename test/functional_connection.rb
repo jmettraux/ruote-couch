@@ -64,10 +64,10 @@ def new_storage (opts)
 
   opts ||= {}
 
-  #Ruote::Couch::CouchStorage.new(
+  #Ruote::Couch::Storage.new(
   #  _couch_url,
   #  opts.merge!('couch_prefix' => 'test', :basic_auth => %w[ admin admin ]))
-  Ruote::Couch::CouchStorage.new(
+  Ruote::Couch::Storage.new(
     _couch_url,
     opts.merge!('couch_prefix' => 'test'))
 end

@@ -38,7 +38,7 @@ module Couch
   # The storage merely 'routes' work to Ruote::Couch::Database instances,
   # one per document 'type' (expressions, msgs, schedules, variables, ...)
   #
-  class CouchStorage
+  class Storage
 
     include Ruote::StorageBase
 
@@ -280,6 +280,12 @@ module Couch
         @schedules_queue << [ deleted, doc ]
       end
     end
+  end
+
+  #
+  # Kept for backward compatibility.
+  #
+  class CouchStorage < Storage
   end
 end
 end

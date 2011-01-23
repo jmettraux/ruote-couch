@@ -244,7 +244,7 @@ module Ruote::Couch
   #
   class WorkitemDatabase < WfidIndexedDatabase
 
-    # This method is called by CouchStorage#by_field
+    # This method is called by Storage#by_field
     #
     def by_field (field, value=nil, opts={})
 
@@ -254,7 +254,7 @@ module Ruote::Couch
         'ruote:by_field', opts.merge(:key => field))
     end
 
-    # This method is called by CouchStorage#by_participant
+    # This method is called by Storage#by_participant
     #
     def by_participant (name, opts={})
 
@@ -262,7 +262,7 @@ module Ruote::Couch
         'ruote:by_participant_name', opts.merge(:key => name))
     end
 
-    # This method is called by CouchStorage#query
+    # This method is called by Storage#query
     #
     def query_workitems (criteria)
 

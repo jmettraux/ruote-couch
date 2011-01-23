@@ -4,6 +4,7 @@
 
 == ruote-couch 2.1.12    not yet released
 
+- Ruote::Couch::CouchStorage -> Ruote::Couch::Storage
 - get_msgs : once per minute do a real get, to avoid losing msgs
 - engine.process(wfid) : fixed issue with freshly deleted documents
   (Thanks Claudio)
