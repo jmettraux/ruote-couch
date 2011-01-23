@@ -17,6 +17,24 @@ task :default => [ :clean ]
 
 
 #
+# test / spec
+
+task :test do
+
+  puts
+  puts "to test ruote-couch, head to your ruote/ dir and run"
+  puts
+  puts "  ruby test/test.rb -- --couch"
+  puts
+  puts "but first, make sure your ruote-couch/test/functional_connection.rb"
+  puts "is set correctly."
+  puts
+end
+
+task :default => [ :test ]
+
+
+#
 # gem
 
 GEMSPEC_FILE = Dir['*.gemspec'].first
