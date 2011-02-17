@@ -194,9 +194,13 @@ module Couch
       ensure_msgs_thread_is_running
 
       msgs = []
-      2.times { msgs = get_many('msgs') } if mt != @poll_threads['msgs']
+      2.times {
+        (msgs = get_many('msgs')) rescue nil
+      } if mt != @poll_threads['msgs']
         #
         # seems necessary to avoid any msgs leak :-(
+        #
+        # added the "rescue nil", to rescue timeout exceptions
 
       while @msgs_queue.size > 0
         msgs << @msgs_queue.pop
