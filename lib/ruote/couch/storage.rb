@@ -210,8 +210,11 @@ module Couch
         #
         # once per minute, do a regular get, to avoid lost msgs
         #
-        msgs = get_many('msgs')
-        @msgs_last_min = Time.now.min
+        begin
+          msgs = get_many('msgs')
+          @msgs_last_min = Time.now.min
+        rescue Rufus::Jig::TimeoutError => te
+        end
       end
 
       msgs
