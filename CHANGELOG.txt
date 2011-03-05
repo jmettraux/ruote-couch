@@ -2,6 +2,11 @@
 = ruote-couch - CHANGELOG.txt
 
 
+== ruote-couch 2.2.1    not yet released
+
+- missed :skip option for #query_workitems (Thanks Eric Smith)
+
+
 == ruote-couch 2.2.0    released 2011/03/01
 
 - Ruote::Couch::CouchStorage -> Ruote::Couch::Storage

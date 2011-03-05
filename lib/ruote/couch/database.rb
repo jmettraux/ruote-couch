@@ -266,7 +266,7 @@ module Ruote::Couch
     #
     def query_workitems (criteria)
 
-      offset = criteria.delete('offset')
+      offset = criteria.delete('offset') || criteria.delete('skip')
       limit = criteria.delete('limit')
 
       wfid =

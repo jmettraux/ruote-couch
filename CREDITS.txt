@@ -15,6 +15,7 @@
 
 == feedback
 
+- Eric Smith - missing :skip option for #query_workitems
 - Claudio Petasecca Donati - https://github.com/etapeta
 
 
