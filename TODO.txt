@@ -15,3 +15,5 @@
 [ ] storage.close
 [ ] http://guide.couchdb.org/draft/notifications.html (filter schedules ?)
 
+[ ] POST /ensure_full_commit
+
