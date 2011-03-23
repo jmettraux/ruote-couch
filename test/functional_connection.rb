@@ -60,7 +60,7 @@ unless $_RUOTE_COUCH_CLEANED
 end
 
 
-def new_storage (opts)
+def new_storage(opts)
 
   opts ||= {}
 

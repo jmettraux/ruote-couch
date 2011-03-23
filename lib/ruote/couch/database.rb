@@ -36,7 +36,7 @@ module Ruote::Couch
     attr_reader :type
     attr_reader :couch
 
-    def initialize (host, port, type, name, opts={})
+    def initialize(host, port, type, name, opts={})
 
       @couch = Rufus::Jig::Couch.new(host, port, name, opts)
 
@@ -47,7 +47,7 @@ module Ruote::Couch
       prepare
     end
 
-    def put (doc, opts)
+    def put(doc, opts)
 
       doc['put_at'] = Ruote.now_to_utc_s
 
@@ -58,12 +58,12 @@ module Ruote::Couch
         # direct "create then apply" chaining
     end
 
-    def get (key, opts={})
+    def get(key, opts={})
 
       @couch.get(key, opts)
     end
 
-    def delete (doc)
+    def delete(doc)
 
       r = @couch.delete(doc)
 
@@ -79,7 +79,7 @@ module Ruote::Couch
 
     # The get_many used by msgs, configurations and variables.
     #
-    def get_many (key, opts)
+    def get_many(key, opts)
 
       if key.nil? && opts.empty?
         return @couch.all(:include_design_docs => false)
@@ -169,20 +169,22 @@ module Ruote::Couch
 
     # The get_many used by errors, expressions and schedules.
     #
-    def get_many (key, opts)
+    def get_many(key, opts)
 
       return super(key, opts) unless key.is_a?(String)
 
       # key is a wfid
 
-      @couch.query_for_docs('ruote:by_wfid', :key => key)
+      docs = @couch.query_for_docs('ruote:by_wfid', :key => key)
+
+      opts[:count] ? docs.size : docs
     end
 
     # Used by WorkitemDatabase#query
     #
-    def by_wfid (wfid)
+    def by_wfid(wfid, opts={})
 
-      get_many(wfid, {})
+      get_many(wfid, opts)
     end
 
     # Returns the design document that goes with this class of database
@@ -246,25 +248,29 @@ module Ruote::Couch
 
     # This method is called by Storage#by_field
     #
-    def by_field (field, value=nil, opts={})
+    def by_field(field, value, opts)
 
       field = { field => value } if value
 
-      @couch.query_for_docs(
+      docs = @couch.query_for_docs(
         'ruote:by_field', opts.merge(:key => field))
+
+      opts[:count] ? docs.size : docs
     end
 
-    # This method is called by Storage#by_participant
+    # This method is called by #query_workitems and Storage#by_participant
     #
-    def by_participant (name, opts={})
+    def by_participant(name, opts)
 
-      @couch.query_for_docs(
+      docs = @couch.query_for_docs(
         'ruote:by_participant_name', opts.merge(:key => name))
+
+      opts[:count] ? docs.size : docs
     end
 
     # This method is called by Storage#query
     #
-    def query_workitems (criteria)
+    def query_workitems(criteria)
 
       offset = criteria.delete('offset') || criteria.delete('skip')
       limit = criteria.delete('limit')
@@ -275,7 +281,7 @@ module Ruote::Couch
         criteria.delete('participant_name') || criteria.delete('participant')
 
       if criteria.empty? && (wfid.nil? ^ pname.nil?)
-        return by_participant(pname) if pname
+        return by_participant(pname, {}) if pname
         return by_wfid(wfid) # if wfid
       end
 

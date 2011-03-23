@@ -50,7 +50,7 @@ module Couch
     # added to all the database names used by this storage. 'prefix' is accepted
     # as well.
     #
-    def initialize (*args)
+    def initialize(*args)
 
       hc = Rufus::Jig::HttpCore.new(*args)
         # leverage the argument parsing logic in there
@@ -92,17 +92,17 @@ module Couch
       @schedules_last_min = nil
     end
 
-    def put (doc, opts={})
+    def put(doc, opts={})
 
       @dbs[doc['type']].put(doc, opts)
     end
 
-    def get (type, key)
+    def get(type, key)
 
       @dbs[type].get(key)
     end
 
-    def delete (doc)
+    def delete(doc)
 
       db = @dbs[doc['type']]
 
@@ -111,12 +111,12 @@ module Couch
       db.delete(doc)
     end
 
-    def get_many (type, key=nil, opts={})
+    def get_many(type, key=nil, opts={})
 
       @dbs[type].get_many(key, opts)
     end
 
-    def ids (type)
+    def ids(type)
 
       @dbs[type].ids
     end
@@ -124,10 +124,9 @@ module Couch
     def purge!
 
       @dbs.values.each { |db| db.purge! }
-      #@dbs.values.each { |db| db.shutdown }
     end
 
-    def dump (type)
+    def dump(type)
 
       @dbs[type].dump
     end
@@ -140,7 +139,7 @@ module Couch
 
     # Mainly used by ruote's test/unit/ut_17_storage.rb
     #
-    def add_type (type)
+    def add_type(type)
 
       @dbs[type] = Database.new(
         #@host, @port, type, "#{@prefix}ruote_#{type}", false)
@@ -149,7 +148,7 @@ module Couch
 
     # Nukes a db type and reputs it (losing all the documents that were in it).
     #
-    def purge_type! (type)
+    def purge_type!(type)
 
       if db = @dbs[type]
         db.purge!
@@ -159,21 +158,28 @@ module Couch
     # A provision made for workitems, allow to query them directly by
     # participant name.
     #
-    def by_participant (type, participant_name, opts)
+    def by_participant(type, participant_name, opts)
 
       raise NotImplementedError if type != 'workitems'
 
       @dbs['workitems'].by_participant(participant_name, opts)
     end
 
-    def by_field (type, field, value=nil)
+    def by_field(type, field, value, opts)
 
       raise NotImplementedError if type != 'workitems'
 
-      @dbs['workitems'].by_field(field, value)
+      @dbs['workitems'].by_field(field, value, opts)
     end
 
-    def query_workitems (criteria)
+    def by_wfid(type, wfid, opts)
+
+      raise NotImplementedError if type != 'workitems'
+
+      @dbs['workitems'].by_wfid(wfid, opts)
+    end
+
+    def query_workitems(criteria)
 
       count = criteria.delete('count')
 
@@ -220,7 +226,7 @@ module Couch
       msgs
     end
 
-    def get_schedules (delta, now)
+    def get_schedules(delta, now)
 
       ensure_schedules_thread_is_running
 
@@ -260,7 +266,7 @@ module Couch
       put(conf)
     end
 
-    def ensure_poll_thread_is_running (doctype, &block)
+    def ensure_poll_thread_is_running(doctype, &block)
 
       if t = @poll_threads[doctype]
         return if t.status == 'run' || t.status == 'sleep' # thread is OK
