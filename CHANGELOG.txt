@@ -4,6 +4,7 @@
 
 == ruote-couch 2.2.1    not yet released
 
+- StorageParticipant #query and :limit fix (Thanks Jan Topiński)
 - StorageParticipant :count => true made consistent (Thanks Jan Topiński)
 - missed :skip option for #query_workitems (Thanks Eric Smith)
 

@@ -272,24 +272,23 @@ module Ruote::Couch
     #
     def query_workitems(criteria)
 
-      offset = criteria.delete('offset') || criteria.delete('skip')
-      limit = criteria.delete('limit')
+      opts = {
+        :skip => criteria.delete('offset') || criteria.delete('skip'),
+        :limit => criteria.delete('limit')
+      }
 
       wfid =
         criteria.delete('wfid')
       pname =
         criteria.delete('participant_name') || criteria.delete('participant')
 
-      if criteria.empty? && (wfid.nil? ^ pname.nil?)
-        return by_participant(pname, {}) if pname
-        return by_wfid(wfid) # if wfid
+      if criteria.empty?
+        return by_participant(pname, opts) if pname
+        return by_wfid(wfid, opts) if wfid
+        return get_many(nil, opts)
       end
 
-      return get_many(nil, {}) if criteria.empty?
-
       cr = criteria.collect { |fname, fvalue| { fname => fvalue } }
-
-      opts = { :skip => offset, :limit => limit }
 
       hwis = @couch.query_for_docs('ruote:by_field', opts.merge(:keys => cr))
 
