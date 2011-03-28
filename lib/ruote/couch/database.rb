@@ -182,9 +182,11 @@ module Ruote::Couch
 
     # Used by WorkitemDatabase#query
     #
-    def by_wfid(wfid, opts={})
+    def by_wfid(wfid, opts)
 
-      get_many(wfid, opts)
+      res = get_many(wfid, opts)
+
+      res.is_a?(Array) ? res.collect { |doc| Ruote::Workitem.new(doc) } : res
     end
 
     # Returns the design document that goes with this class of database
@@ -250,12 +252,14 @@ module Ruote::Couch
     #
     def by_field(field, value, opts)
 
-      field = { field => value } if value
-
       docs = @couch.query_for_docs(
-        'ruote:by_field', opts.merge(:key => field))
+        'ruote:by_field',
+        opts.merge(
+          :key => value ? { field => value } : field,
+          :skip => opts[:offset] || opts[:skip],
+          :limit => opts[:limit]))
 
-      opts[:count] ? docs.size : docs
+      opts[:count] ? docs.size : docs.collect { |h| Ruote::Workitem.new(h) }
     end
 
     # This method is called by #query_workitems and Storage#by_participant
@@ -263,9 +267,13 @@ module Ruote::Couch
     def by_participant(name, opts)
 
       docs = @couch.query_for_docs(
-        'ruote:by_participant_name', opts.merge(:key => name))
+        'ruote:by_participant_name',
+        opts.merge(
+          :key => name,
+          :skip => opts[:offset] || opts[:skip],
+          :limit => opts[:limit]))
 
-      opts[:count] ? docs.size : docs
+      opts[:count] ? docs.size : docs.collect { |h| Ruote::Workitem.new(h) }
     end
 
     # This method is called by Storage#query
@@ -285,18 +293,22 @@ module Ruote::Couch
       if criteria.empty?
         return by_participant(pname, opts) if pname
         return by_wfid(wfid, opts) if wfid
-        return get_many(nil, opts)
+        return get_many(nil, opts).collect { |hwi| Ruote::Workitem.new(hwi) }
       end
 
       cr = criteria.collect { |fname, fvalue| { fname => fvalue } }
 
       hwis = @couch.query_for_docs('ruote:by_field', opts.merge(:keys => cr))
 
-      hwis = hwis.select { |hwi| hwi['fei']['wfid'] == wfid } if wfid
+      hwis = hwis.select { |hwi|
+        hwi['fei']['wfid'] == wfid
+      } if wfid
 
-      hwis.select { |hwi|
+      hwis = hwis.select { |hwi|
         Ruote::StorageParticipant.matches?(hwi, pname, criteria)
       }
+
+      hwis.collect { |hwi| Ruote::Workitem.new(hwi) }
     end
 
     # Returns the design document that goes with this class of database
