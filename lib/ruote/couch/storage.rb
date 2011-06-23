@@ -80,7 +80,7 @@ module Couch
       @dbs['workitems'] = WorkitemDatabase.new(
         @host, @port, 'workitems', "#{@prefix}ruote_workitems", @options)
 
-      put_configuration
+      replace_engine_configuration(@options)
 
       @poll_threads = {}
 
@@ -255,15 +255,6 @@ module Couch
     end
 
     protected
-
-    def put_configuration
-
-      return if get('configurations', 'engine')
-
-      conf = { '_id' => 'engine', 'type' => 'configurations' }.merge!(@options)
-
-      put(conf)
-    end
 
     def ensure_poll_thread_is_running(doctype, &block)
 

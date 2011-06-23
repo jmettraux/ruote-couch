@@ -9,6 +9,7 @@ require 'yajl' rescue require 'json'
 require 'rufus-json'
 Rufus::Json.detect_backend
 
+
 unless $http_lib_loaded
   begin
     if ARGV.include?('--patron')
