@@ -165,7 +165,7 @@ module Couch
       @dbs['workitems'].by_participant(participant_name, opts)
     end
 
-    def by_field(type, field, value, opts)
+    def by_field(type, field, value, opts={})
 
       raise NotImplementedError if type != 'workitems'
 
