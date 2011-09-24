@@ -3,7 +3,11 @@
 Gem::Specification.new do |s|
 
   s.name = 'ruote-couch'
-  s.version = File.read('lib/ruote/couch/version.rb').match(/VERSION = '([^']+)'/)[1]
+
+  s.version = File.read(
+    File.expand_path('../lib/ruote/couch/version.rb', __FILE__)
+  ).match(/ VERSION *= *['"]([^'"]+)/)[1]
+
   s.platform = Gem::Platform::RUBY
   s.authors = [ 'John Mettraux' ]
   s.email = [ 'jmettraux@gmail.com' ]
