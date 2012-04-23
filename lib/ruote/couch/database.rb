@@ -200,6 +200,8 @@ module Ruote::Couch
 
     def design_doc
 
+      # the doc.owner last "else if" is for schedule documents.
+
       {
         '_id' => '_design/ruote',
         'views' => {
@@ -208,6 +210,7 @@ module Ruote::Couch
               function (doc) {
                 if (doc.wfid) emit(doc.wfid, null);
                 else if (doc.fei) emit(doc.fei.wfid, null);
+                else if (doc.owner) emit(doc.owner.wfid, null);
               }
             }
           }
