@@ -192,7 +192,9 @@ module Couch
     # Taking care of using long-polling
     # (http://wiki.apache.org/couchdb/HTTP_database_API) when possible
     #
-    def get_msgs
+    # The worker argument is not used in this storage implementation.
+    #
+    def get_msgs(worker)
 
       mt = @poll_threads['msgs']
 
