@@ -194,7 +194,7 @@ module Couch
     #
     # The worker argument is not used in this storage implementation.
     #
-    def get_msgs(worker)
+    def get_msgs
 
       mt = @poll_threads['msgs']
 
