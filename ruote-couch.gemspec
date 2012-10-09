@@ -25,7 +25,7 @@ CouchDB storage for ruote 2.1 (ruby workflow engine)
     '*.gemspec', '*.txt', '*.rdoc', '*.md'
   ]
 
-  s.add_dependency 'ruote', ">= #{s.version}"
+  s.add_runtime_dependency 'ruote', ">= #{s.version.to_s.split('.')[0, 3].join('.')}"
   s.add_dependency 'rufus-jig', '>= 1.0.0'
 
   s.add_development_dependency 'rake'
