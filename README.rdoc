@@ -1,7 +1,12 @@
 
+= purpose of this fork
+
+* use a single database
+* optimize
+
 = ruote-couch
 
-A storage implementation for ruote 2.1.x.
+A storage implementation for ruote 2.3.x.
 
 Warning : this is a very naive implementation for now. Not many optimizations...
 
@@ -14,12 +19,6 @@ assuming you have
 
   ruote/
   ruote-couch/
-
-* unit tests :
-
-get into ruote/ and do
-
-  ruby test/unit/storage.rb -- --couch
 
 * functional tests :
 
