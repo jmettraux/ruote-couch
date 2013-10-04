@@ -28,21 +28,15 @@ module Ruote::Couch
   #
   # A database corresponds to a Couch database (not a Couch server).
   #
-  # There is one database per ruote document type (msgs, workitems,
-  # expressions, ...)
-  #
   class Database
 
-    attr_reader :type
     attr_reader :couch
 
-    def initialize(host, port, type, name, opts={})
+    def initialize(host, port, name, opts={})
 
       @couch = Rufus::Jig::Couch.new(host, port, name, opts)
 
       @couch.put('.') unless @couch.get('.')
-
-      @type = type
 
       prepare
     end
@@ -77,15 +71,17 @@ module Ruote::Couch
       true
     end
 
-    # The get_many used by msgs, configurations and variables.
-    #
-    def get_many(key, opts)
+    def get_many(type, key, opts)
 
       if key.nil? && opts.empty?
-        return @couch.all(:include_design_docs => false)
+        return @couch.query_for_docs("ruote:#{type}")
       end
 
-      is = ids
+      if %w( errors expressions schedules workitems ).include?(type) && key.is_a?(String)
+        return @couch.query_for_docs("ruote:#{type}_by_wfid", :key => key)
+      end
+
+      is = ids(type)
 
       return is.length if opts[:count]
       return [] if is.empty?
@@ -105,24 +101,27 @@ module Ruote::Couch
       #return [] if is.empty?
         # not necessary at this point, jig provides already this optimization.
 
-      @couch.all(:keys => is)
+      @couch.query_for_docs("ruote:#{type}", :keys => is)
     end
 
-    # Returns a sorted list of the ids of all the docs in this database.
+    # Returns a sorted list of the ids of all the docs in this database
+    # of the given type.
     #
-    def ids
+    def ids(type)
 
-      @couch.ids(:include_design_docs => false)
+      @couch.
+        query_for_docs("ruote:#{type}", :include_docs => false).
+        map { |row| row['_id'] }
     end
 
-    def dump
+    def dump(type)
 
-      s = "=== #{@type} ===\n"
+      s = "=== #{type} ===\n"
 
-      get_many(nil, {}).inject(s) do |s1, e|
+      get_many(type, nil, {}).inject(s) do |s1, e|
         s1 << "\n"
         e.keys.sort.inject(s1) do |s2, k|
-          s2 << "  #{k} => #{e[k].inspect}\n"
+          s2 << "  #{k}: #{e[k]}\n"
         end
       end
     end
@@ -138,96 +137,23 @@ module Ruote::Couch
     #
     def purge!
 
-      #@couch.http.cache.clear
-      #@couch.all(
-      #  :include_docs => false, :include_design_docs => false
-      #).each do |doc|
-      #  @couch.delete(doc)
-      #end
       docs = @couch.all(:include_docs => false, :include_design_docs => false)
       @couch.bulk_delete(docs)
-        #
-        # which is faster than
-        #
-      #@couch.delete('.')
-      #@couch.put('.')
-      #@couch.http.cache.clear
     end
 
-    protected
+    def purge_type!(type)
 
-    # Well, empty. Nothing to do for a index-less database
-    #
-    def prepare
-    end
-  end
-
-  #
-  # A Couch database with a by_wfid view.
-  #
-  class WfidIndexedDatabase < Database
-
-    # The get_many used by errors, expressions and schedules.
-    #
-    def get_many(key, opts)
-
-      return super(key, opts) unless key.is_a?(String)
-
-      # key is a wfid
-
-      docs = @couch.query_for_docs('ruote:by_wfid', :key => key)
-
-      opts[:count] ? docs.size : docs
+      docs = @couch.query_for_docs("ruote:#{type}", :include_docs => false, :include_design_docs => false)
+      @couch.bulk_delete(docs)
     end
 
     # Used by WorkitemDatabase#query
     #
     def by_wfid(wfid, opts)
 
-      res = get_many(wfid, opts)
+      res = get_many('workitems', wfid, opts)
 
       res.is_a?(Array) ? res.collect { |doc| Ruote::Workitem.new(doc) } : res
-    end
-
-    # Returns the design document that goes with this class of database
-    #
-    def self.design_doc
-
-      self.allocate.send(:design_doc)
-    end
-
-    protected
-
-    def design_doc
-
-      # the doc.owner last "else if" is for schedule documents.
-
-      {
-        '_id' => '_design/ruote',
-        'views' => {
-          'by_wfid' => {
-            'map' => %{
-              function (doc) {
-                if (doc.wfid) emit(doc.wfid, null);
-                else if (doc.fei) emit(doc.fei.wfid, null);
-                else if (doc.owner) emit(doc.owner.wfid, null);
-              }
-            }
-          }
-        }
-      }
-    end
-
-    def prepare
-
-      d = @couch.get('_design/ruote')
-
-      return if d && d['views'] == design_doc['views']
-
-      d ||= design_doc
-      d['views'] = design_doc['views']
-
-      @couch.put(design_doc)
     end
 
     #--
@@ -244,19 +170,13 @@ module Ruote::Couch
     #end
       # keeping it frozen for now
       #++
-  end
-
-  #
-  # A Couch database with a by_wfid view and a by_field view.
-  #
-  class WorkitemDatabase < WfidIndexedDatabase
 
     # This method is called by Storage#by_field
     #
     def by_field(field, value, opts)
 
       docs = @couch.query_for_docs(
-        'ruote:by_field',
+        'ruote:workitems_by_field',
         opts.merge(
           :key => value ? { field => value } : field,
           :skip => opts[:offset] || opts[:skip],
@@ -270,7 +190,7 @@ module Ruote::Couch
     def by_participant(name, opts)
 
       docs = @couch.query_for_docs(
-        'ruote:by_participant_name',
+        'ruote:workitems_by_participant_name',
         opts.merge(
           :key => name,
           :skip => opts[:offset] || opts[:skip],
@@ -296,12 +216,12 @@ module Ruote::Couch
       if criteria.empty?
         return by_participant(pname, opts) if pname
         return by_wfid(wfid, opts) if wfid
-        return get_many(nil, opts).collect { |hwi| Ruote::Workitem.new(hwi) }
+        return get_many('workitems', nil, opts).collect { |hwi| Ruote::Workitem.new(hwi) }
       end
 
       cr = criteria.collect { |fname, fvalue| { fname => fvalue } }
 
-      hwis = @couch.query_for_docs('ruote:by_field', opts.merge(:keys => cr))
+      hwis = @couch.query_for_docs('ruote:workitems_by_field', opts.merge(:keys => cr))
 
       hwis = hwis.select { |hwi|
         hwi['fei']['wfid'] == wfid
@@ -314,6 +234,7 @@ module Ruote::Couch
       hwis.collect { |hwi| Ruote::Workitem.new(hwi) }
     end
 
+
     # Returns the design document that goes with this class of database
     #
     def self.design_doc
@@ -323,49 +244,88 @@ module Ruote::Couch
 
     protected
 
+    def prepare
+
+      d = @couch.get(design_doc['_id'])
+
+      return if d && d['views'] == design_doc['views']
+
+      d ||= design_doc
+      d['views'] = design_doc['views']
+
+      @couch.put(d)
+    end
+
+    def type_views
+      %w( configurations errors expressions msgs schedules variables workitems ).inject({}) do |h, type|
+        h.update(type => {
+          'map' => %{ function(doc) { if (doc.type == '#{type}') emit (doc._id, 1); } }
+        })
+      end
+    end
+
     def design_doc
+      @design_doc ||= {
+        '_id' => '_design/ruote',
 
-      doc = super
+        'views' => {
+          'errors_by_wfid' => {
+            'map' => %{ function (doc) { if (doc.type == 'errors' && doc.fei) emit(doc.fei.wfid, 1); } }
+          },
 
-      # NOTE : with 'by_field', for a workitem with N fields there are
-      # currently 2 * N rows generated per workitem.
-      #
-      # Why not restrict { field => value } keys to only fields whose value
-      # is a string, a boolean or null ? I have the impression that querying
-      # for field whose value is 'complex' (array or hash) is not necessary
-      # (though sounding crazy useful).
+          'expressions_by_wfid' => {
+            'map' => %{ function (doc) { if (doc.type == 'expressions' && doc.fei) emit(doc.fei.wfid, 1); } }
+          },
 
-      doc['views']['by_field'] = {
-        'map' => %{
-          function(doc) {
-            if (doc.fields) {
-              for (var field in doc.fields) {
+          'schedules_by_wfid' => {
+            'map' => %{ function (doc) { if (doc.type == 'schedules' && doc.owner) emit(doc.owner.wfid, 1); } }
+          },
 
-                emit(field, null);
+          'workitems_by_wfid' => {
+            'map' => %{ function (doc) { if (doc.type == 'workitems') emit(doc.wfid, 1); } }
+          },
 
-                var entry = {};
-                entry[field] = doc.fields[field]
-                emit(entry, null);
-                  //
-                  // have to use that 'entry' trick...
-                  // else the field is named 'field'
+          # NOTE : with 'by_field', for a workitem with N fields there are
+          # currently 2 * N rows generated per workitem.
+          #
+          # Why not restrict { field => value } keys to only fields whose value
+          # is a string, a boolean or null ? I have the impression that querying
+          # for field whose value is 'complex' (array or hash) is not necessary
+          # (though sounding crazy useful).
+          'workitems_by_field' => {
+            'map' => %{
+              function(doc) {
+                if (doc.fields) {
+                  for (var field in doc.fields) {
+
+                    emit(field, null);
+
+                    var entry = {};
+                    entry[field] = doc.fields[field]
+                    emit(entry, null);
+                      //
+                      // have to use that 'entry' trick...
+                      // else the field is named 'field'
+                  }
+                }
+              }
+            }
+          },
+
+          'workitems_by_participant_name' => {
+            'map' => %{
+              function (doc) {
+                if (doc.participant_name) {
+                  emit(doc.participant_name, null);
+                }
               }
             }
           }
-        }
-      }
-      doc['views']['by_participant_name'] = {
-        'map' => %{
-          function (doc) {
-            if (doc.participant_name) {
-              emit(doc.participant_name, null);
-            }
-          }
-        }
-      }
 
-      doc
+        }.merge(type_views)
+      }
     end
+
   end
 end
 
