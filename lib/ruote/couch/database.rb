@@ -43,6 +43,7 @@ module Ruote::Couch
 
     def put(doc, opts)
 
+      doc = doc.dup unless opts[:update_rev]
       doc['put_at'] = Ruote.now_to_utc_s
 
       @couch.put(doc, :update_rev => opts[:update_rev])
