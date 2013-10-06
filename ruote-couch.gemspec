@@ -9,23 +9,17 @@ Gem::Specification.new do |s|
   ).match(/ VERSION *= *['"]([^'"]+)/)[1]
 
   s.platform = Gem::Platform::RUBY
-  s.authors = [ 'John Mettraux' ]
-  s.email = [ 'jmettraux@gmail.com' ]
+  s.authors = [ 'John Mettraux', 'Marcello Barnaba' ]
+  s.email = [ 'jmettraux@gmail.com', 'vjt@openssl.it' ]
   s.homepage = 'http://github.com/jmettraux/ruote-couch'
-  s.rubyforge_project = 'ruote'
-  s.summary = 'CouchDB storage for ruote 2.1'
+  s.summary = "CouchDB storage for ruote #{s.version} and up"
   s.description = %{
-CouchDB storage for ruote 2.1 (ruby workflow engine)
+CouchDB storage for ruote #{s.version} and up (ruby workflow engine)
   }.strip
 
-  #s.files = `git ls-files`.split("\n")
-  s.files = Dir[
-    'Rakefile',
-    'lib/**/*.rb', 'spec/**/*.rb', 'test/**/*.rb',
-    '*.gemspec', '*.txt', '*.rdoc', '*.md'
-  ]
+  s.files = `git ls-files`.split("\n")
 
-  s.add_runtime_dependency 'ruote', ">= #{s.version.to_s.split('.')[0, 3].join('.')}"
+  s.add_runtime_dependency 'ruote', "~> #{s.version.to_s.split('.')[0, 3].join('.')}"
   s.add_dependency 'rufus-jig', '>= 1.0.0'
 
   s.add_development_dependency 'rake'

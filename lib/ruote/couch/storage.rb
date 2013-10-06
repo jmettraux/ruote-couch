@@ -47,7 +47,7 @@ module Couch
     # Hooks the storage to a CouchDB instance.
     #
     # The main option is 'couch_prefix', which indicate which prefix should be
-    # added to all the database names used by this storage. 'prefix' is accepted
+    # added to the database name used by this storage. 'prefix' is accepted
     # as well.
     #
     def initialize(*args)
@@ -60,29 +60,15 @@ module Couch
 
       @options = hc.options
 
-      @prefix = hc.options['couch_prefix'] || hc.options['prefix'] || ''
-      @prefix = "#{@prefix}_" if @prefix.size > 0
+      name = [
+	hc.options['couch_prefix'] || hc.options['prefix'], 'ruote'
+      ].compact.join('_')
 
-      @dbs = {}
-
-      %w[ msgs configurations variables ].each do |type|
-
-        @dbs[type] = Database.new(
-          @host, @port, type, "#{@prefix}ruote_#{type}", @options)
-      end
-
-      %w[ errors expressions schedules ].each do |type|
-
-        @dbs[type] = WfidIndexedDatabase.new(
-          @host, @port, type, "#{@prefix}ruote_#{type}", @options)
-      end
-
-      @dbs['workitems'] = WorkitemDatabase.new(
-        @host, @port, 'workitems', "#{@prefix}ruote_workitems", @options)
+      @db = Database.new(@host, @port, name, @options)
 
       replace_engine_configuration(@options)
 
-      @poll_threads = {}
+      @poll_thread = nil
 
       @msgs_queue = ::Queue.new
       @msgs_last_min = nil
@@ -94,65 +80,55 @@ module Couch
 
     def put(doc, opts={})
 
-      @dbs[doc['type']].put(doc, opts)
+      @db.put(doc, opts)
     end
 
     def get(type, key)
 
-      @dbs[type].get(key)
+      @db.get(key)
     end
 
     def delete(doc)
 
-      db = @dbs[doc['type']]
-
-      raise ArgumentError.new("no database for type '#{doc['type']}'") unless db
-
-      db.delete(doc)
+      @db.delete(doc)
     end
 
     def get_many(type, key=nil, opts={})
 
-      @dbs[type].get_many(key, opts)
+      @db.get_many(type, key, opts)
     end
 
     def ids(type)
 
-      @dbs[type].ids
+      @db.ids(type)
     end
 
     def purge!
 
-      @dbs.values.each { |db| db.purge! }
+      @db.purge!
     end
 
     def dump(type)
 
-      @dbs[type].dump
+      @db.dump(type)
     end
 
     def shutdown
 
-      @dbs.values.each { |db| db.shutdown }
-      @poll_threads.values.each { |t| t.kill rescue nil }
+      @db.shutdown
+      @poll_thread.kill rescue nil
     end
 
-    # Mainly used by ruote's test/unit/ut_17_storage.rb
+    # This storage can add new types on the fly.
     #
     def add_type(type)
-
-      @dbs[type] = Database.new(
-        #@host, @port, type, "#{@prefix}ruote_#{type}", false)
-        @host, @port, type, "#{@prefix}ruote_#{type}")
     end
 
     # Nukes a db type and reputs it (losing all the documents that were in it).
     #
     def purge_type!(type)
 
-      if db = @dbs[type]
-        db.purge!
-      end
+      @db.purge_type!(type)
     end
 
     # A provision made for workitems, allow to query them directly by
@@ -162,27 +138,27 @@ module Couch
 
       raise NotImplementedError if type != 'workitems'
 
-      @dbs['workitems'].by_participant(participant_name, opts)
+      @db.by_participant(participant_name, opts)
     end
 
     def by_field(type, field, value, opts={})
 
       raise NotImplementedError if type != 'workitems'
 
-      @dbs['workitems'].by_field(field, value, opts)
+      @db.by_field(field, value, opts)
     end
 
     def by_wfid(type, wfid, opts)
 
       raise NotImplementedError if type != 'workitems'
 
-      @dbs['workitems'].by_wfid(wfid, opts)
+      @db.by_wfid(wfid, opts)
     end
 
     def query_workitems(criteria)
 
       count = criteria.delete('count')
-      res = @dbs['workitems'].query_workitems(criteria)
+      res = @db.query_workitems(criteria)
 
       count ? res.size : res
     end
@@ -196,14 +172,14 @@ module Couch
     #
     def get_msgs
 
-      mt = @poll_threads['msgs']
+      mt = @poll_thread
 
-      ensure_msgs_thread_is_running
+      ensure_poll_thread_is_running
 
       msgs = []
       2.times {
         (msgs = get_many('msgs')) rescue nil
-      } if mt != @poll_threads['msgs']
+      } if mt != @poll_thread
         #
         # seems necessary to avoid any msgs leak :-(
         #
@@ -229,7 +205,7 @@ module Couch
 
     def get_schedules(delta, now)
 
-      ensure_schedules_thread_is_running
+      ensure_poll_thread_is_running
 
       while @schedules_queue.size > 0
 
@@ -258,33 +234,29 @@ module Couch
 
     protected
 
-    def ensure_poll_thread_is_running(doctype, &block)
+    def ensure_poll_thread_is_running
 
-      if t = @poll_threads[doctype]
+      if t = @poll_thread
         return if t.status == 'run' || t.status == 'sleep' # thread is OK
       end
 
       # create or revive thread....
 
-      @poll_threads[doctype] = Thread.new do
+      @poll_thread = Thread.new do
 
-        @dbs[doctype].couch.on_change(&block) rescue nil
+        @db.couch.on_change do |_, deleted, doc|
+          # FIXME http://docs.couchdb.org/en/latest/couchapp/ddocs.html#filterfun
+          #
+          case doc['type']
+          when 'msgs'      then @msgs_queue << doc unless deleted
+
+          when 'schedules' then @schedules_queue << [ deleted, doc ]
+
+          end
+        end
       end
     end
 
-    def ensure_msgs_thread_is_running
-
-      ensure_poll_thread_is_running 'msgs' do |_, deleted, doc|
-        @msgs_queue << doc unless deleted
-      end
-    end
-
-    def ensure_schedules_thread_is_running
-
-      ensure_poll_thread_is_running 'schedules' do |_, deleted, doc|
-        @schedules_queue << [ deleted, doc ]
-      end
-    end
   end
 
   #
