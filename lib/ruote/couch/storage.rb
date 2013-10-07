@@ -42,8 +42,6 @@ module Couch
 
     include Ruote::StorageBase
 
-    attr_reader :couch
-
     # Hooks the storage to a CouchDB instance.
     #
     # The main option is 'couch_prefix', which indicate which prefix should be
