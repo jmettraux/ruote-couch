@@ -36,7 +36,10 @@ module Ruote::Couch
 
       @couch = Rufus::Jig::Couch.new(host, port, name, opts)
 
-      @couch.put('.') unless @couch.get('.')
+      unless @couch.get('.')
+        @couch.put('.')
+        try_upgrade!
+      end
 
       prepare
     end
@@ -257,8 +260,42 @@ module Ruote::Couch
       @couch.put(d)
     end
 
+    def try_upgrade!
+
+      dbs = types.map do |type|
+
+        # Check whether the old databases exists..
+        name = [@couch.name, type].join('_')
+        db = Rufus::Jig::Couch.new(
+          @couch.http.host, @couch.http.port, name, @couch.http.options)
+
+        db if db.get('.')
+      end
+
+      # If all dbs exist, then copy over the data from them.
+      if dbs.all?
+
+        dbs.each do |db|
+
+          db.all(:include_docs => true, :include_design_docs => false).each do |doc|
+
+            doc.delete('_rev')
+            @couch.put doc
+          end
+
+          db.delete '.'
+
+        end
+      end
+
+    end
+
+    def types
+      %w( configurations errors expressions msgs schedules variables workitems )
+    end
+
     def type_views
-      %w( configurations errors expressions msgs schedules variables workitems ).inject({}) do |h, type|
+      types.inject({}) do |h, type|
         h.update(type => {
           'map' => %{ function(doc) { if (doc.type == '#{type}') emit (doc._id, 1); } }
         })
