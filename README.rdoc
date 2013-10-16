@@ -1,9 +1,4 @@
 
-= purpose of this fork
-
-* use a single database
-* optimize
-
 = ruote-couch
 
 A storage implementation for ruote 2.3.x.

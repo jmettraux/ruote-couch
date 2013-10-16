@@ -7,6 +7,8 @@
 - StorageParticipant :skip :limit fix (Thanks Jan Topiński)
 - StorageParticipant :count => true made consistent (Thanks Jan Topiński)
 - missed :skip option for #query_workitems (Thanks Eric Smith)
+- Use a single database for all ruote objects (Marcello Barnaba)
+  The storage is automatically migrated on the first start.
 
 
 == ruote-couch 2.2.0    released 2011/03/01
