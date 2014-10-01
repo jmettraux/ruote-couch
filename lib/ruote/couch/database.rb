@@ -306,6 +306,8 @@ module Ruote::Couch
       @design_doc ||= {
         '_id' => '_design/ruote',
 
+        'language' => 'javascript',
+
         'views' => {
           'errors_by_wfid' => {
             'map' => %{ function (doc) { if (doc.type == 'errors' && doc.fei) emit(doc.fei.wfid, 1); } }
