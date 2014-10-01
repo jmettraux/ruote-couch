@@ -114,8 +114,8 @@ module Ruote::Couch
     def ids(type)
 
       @couch.
-        query_for_docs("ruote:#{type}", :include_docs => false).
-        map { |row| row['_id'] }
+        query("ruote:#{type}", :include_docs => false).
+        map { |row| row['id'] }
     end
 
     def dump(type)
