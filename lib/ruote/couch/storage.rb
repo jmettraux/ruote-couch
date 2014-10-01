@@ -62,7 +62,7 @@ module Couch
 	hc.options['couch_prefix'] || hc.options['prefix'], 'ruote'
       ].compact.join('_')
 
-      @db = Database.new(@host, @port, name, @options)
+      @db = self.class.const_get(:Database).new(@host, @port, name, @options)
 
       replace_engine_configuration(@options)
 
